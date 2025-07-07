@@ -13,12 +13,12 @@ from reportlab.lib.styles import getSampleStyleSheet
 
 from geotypes import create_geotype
 
-# Chiudi tutte le figure aperte
-# Chiudi tutti i plot esistenti
+# Close all open figures
+# Close all existing plots
 plt.close('all')
 
 
-# Definizione dell'enum per i tipi di Radio Equipment
+# Enum definition for Radio Equipment types
 class RadioEquipmentTypeEnum(Enum):
     MACRO_SUB_GHZ = "Macro sub GHz"
     MACRO_1_3_GHZ = "Macro 1-3 GHz"
@@ -29,7 +29,7 @@ class RadioEquipmentTypeEnum(Enum):
     SMALL_24_46_GHZ = "Small 24-46 GHz"
 
 
-# Definizione della classe RadioEquipmentType
+# RadioEquipmentType class definition
 class RadioEquipmentType:
     def __init__(self, bands_range, num_bands_mt, num_bands_lt, service, single_carrier_width, numerology, deployment):
         self.bands_range = bands_range
@@ -38,10 +38,10 @@ class RadioEquipmentType:
         self.service = service
         self.single_carrier_width = single_carrier_width
         self.numerology = numerology
-        self.deployment = deployment  # Nuovo campo deployment (Macro o Small)
+        self.deployment = deployment  # New deployment field (Macro or Small)
 
 
-# Definizione globale dei tipi di radio equipment
+# Global definition of radio equipment types
 radio_equipment_types = {
     RadioEquipmentTypeEnum.MACRO_SUB_GHZ: RadioEquipmentType("Sub GHz", 4, 4, "mobile", 10, 0, "Macro"),
     RadioEquipmentTypeEnum.MACRO_1_3_GHZ: RadioEquipmentType("1-3 GHz", 4, 4, "mobile", 20, 0, "Macro"),
@@ -64,7 +64,7 @@ class RadioEquipment:
         self.single_carrier_width = spec.single_carrier_width
         self.numerology = spec.numerology
 
-        # Aggiungiamo la proprietà deployment basata sul tipo di equipment
+        # Add deployment property based on the equipment type
         self.deployment = "Macro" if "MACRO" in equipment_type_enum.name else "Small"
 
     def calculate_required_capacity(self, term):
