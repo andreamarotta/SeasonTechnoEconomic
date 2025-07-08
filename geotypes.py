@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 def create_dense_urban_geotype():
-    # Definizione dei nodi con il tipo e le coordinate
+    # Definition of nodes with type and coordinates
     nodes = {
-        0: {'type': 0, 'position': (0, 0)},       # Nodo root
-        1: {'type': 1, 'position': (-199.5, 199.5)},  # Macro celle
+        0: {'type': 0, 'position': (0, 0)},       # Root node
+        1: {'type': 1, 'position': (-199.5, 199.5)},  # Macro cells
         2: {'type': 1, 'position': (199.5, 199.5)},
         3: {'type': 1, 'position': (0, 0)},
         4: {'type': 1, 'position': (-199.5, -199.5)},
@@ -37,18 +37,18 @@ def create_dense_urban_geotype():
         30: {'type': 2, 'position': (-133, -332.5)}
     }
 
-    # Funzione per calcolare la distanza di Manhattan tra due punti
+    # Function to compute Manhattan distance between two points
     def manhattan_distance(p1, p2):
         return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
-    # Creazione del grafo con archi Manhattan
+    # Create graph with Manhattan edges
     G = nx.Graph()
 
-    # Aggiunta dei nodi al grafo
+    # Add nodes to the graph
     for key, value in nodes.items():
         G.add_node(key, **value, id=key)
 
-    # Aggiunta degli archi Manhattan al grafo
+    # Add Manhattan edges to the graph
     edges = []
     for i in range(len(nodes)):
         for j in range(i + 1, len(nodes)):
@@ -59,25 +59,25 @@ def create_dense_urban_geotype():
 
     G.add_weighted_edges_from(edges)
 
-    # Creazione del minimo albero coprente
+    # Create the minimum spanning tree
     T = nx.minimum_spanning_tree(G)
 
-    # Copia del grafo T per creare T_m
+    # Copy graph T to create T_m
     T_m = T.copy()
 
-    # Aggiunta dei nodi di tipo 4 (corner nodes) nel grafo T_m
+    # Add type 4 nodes (corner nodes) to graph T_m
     for (u, v) in list(T_m.edges()):
         pos_u = T_m.nodes[u]['position']
         pos_v = T_m.nodes[v]['position']
 
-        # Se necessario, aggiungi un nodo di tipo 4 per creare un angolo
+        # If needed, add a type 4 node to create a corner
         if pos_u[0] != pos_v[0] and pos_u[1] != pos_v[1]:
-            corner = (pos_u[0], pos_v[1])  # Crea un angolo
+            corner = (pos_u[0], pos_v[1])  # Create a corner
             corner_id = len(T_m.nodes)
-            T_m.add_node(corner_id, type=4, position=corner, id=corner_id)  # Aggiungi il nodo di tipo 4
+            T_m.add_node(corner_id, type=4, position=corner, id=corner_id)  # Add the type 4 node
             T_m.add_edge(u, corner_id, weight=manhattan_distance(pos_u, corner))
             T_m.add_edge(corner_id, v, weight=manhattan_distance(corner, pos_v))
-            T_m.remove_edge(u, v)  # Rimuovi l'arco diagonale
+            T_m.remove_edge(u, v)  # Remove the diagonal edge
 
     return T, T_m
 
@@ -87,7 +87,7 @@ def create_urban_geotype():
     nodes = {
         0: {'type': 0, 'position': (0, 0)},       # Nodo root
 
-        1: {'type': 1, 'position': (-600, 600)},  # Macro celle
+        1: {'type': 1, 'position': (-600, 600)},  # Macro cells
         2: {'type': 1, 'position': (600, 600)},
         3: {'type': 1, 'position': (0, 400)},
         4: {'type': 1, 'position': (-400, 0)},
@@ -130,18 +130,18 @@ def create_urban_geotype():
         34: {'type': 2, 'position': (600, -600)},
     }
 
-    # Funzione per calcolare la distanza di Manhattan tra due punti
+    # Function to compute Manhattan distance between two points
     def manhattan_distance(p1, p2):
         return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
-    # Creazione del grafo con archi Manhattan
+    # Create graph with Manhattan edges
     G = nx.Graph()
 
-    # Aggiunta dei nodi al grafo
+    # Add nodes to the graph
     for key, value in nodes.items():
         G.add_node(key, **value, id=key)
 
-    # Aggiunta degli archi Manhattan al grafo
+    # Add Manhattan edges to the graph
     edges = []
     for i in range(len(nodes)):
         for j in range(i + 1, len(nodes)):
@@ -152,25 +152,25 @@ def create_urban_geotype():
 
     G.add_weighted_edges_from(edges)
 
-    # Creazione del minimo albero coprente
+    # Create the minimum spanning tree
     T = nx.minimum_spanning_tree(G)
 
-    # Copia del grafo T per creare T_m
+    # Copy graph T to create T_m
     T_m = T.copy()
 
-    # Aggiunta dei nodi di tipo 4 (corner nodes) nel grafo T_m
+    # Add type 4 nodes (corner nodes) to graph T_m
     for (u, v) in list(T_m.edges()):
         pos_u = T_m.nodes[u]['position']
         pos_v = T_m.nodes[v]['position']
 
-        # Se necessario, aggiungi un nodo di tipo 4 per creare un angolo
+        # If needed, add a type 4 node to create a corner
         if pos_u[0] != pos_v[0] and pos_u[1] != pos_v[1]:
-            corner = (pos_u[0], pos_v[1])  # Crea un angolo
+            corner = (pos_u[0], pos_v[1])  # Create a corner
             corner_id = len(T_m.nodes)
-            T_m.add_node(corner_id, type=4, position=corner, id=corner_id)  # Aggiungi il nodo di tipo 4
+            T_m.add_node(corner_id, type=4, position=corner, id=corner_id)  # Add the type 4 node
             T_m.add_edge(u, corner_id, weight=manhattan_distance(pos_u, corner))
             T_m.add_edge(corner_id, v, weight=manhattan_distance(corner, pos_v))
-            T_m.remove_edge(u, v)  # Rimuovi l'arco diagonale
+            T_m.remove_edge(u, v)  # Remove the diagonal edge
 
     return T, T_m
 
@@ -181,7 +181,7 @@ def create_suburban_geotype():
     nodes = {
         0: {'type': 0, 'position': (0, 0)},       # Nodo root
 
-        1: {'type': 1, 'position': (-1066, 1066)},  # Macro celle
+        1: {'type': 1, 'position': (-1066, 1066)},  # Macro cells
         2: {'type': 1, 'position': (0, 1066)},
         3: {'type': 1, 'position': (1066, 1066)},
         4: {'type': 1, 'position': (-1066, 0)},
@@ -217,18 +217,18 @@ def create_suburban_geotype():
 
     }
 
-    # Funzione per calcolare la distanza di Manhattan tra due punti
+    # Function to compute Manhattan distance between two points
     def manhattan_distance(p1, p2):
         return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
-    # Creazione del grafo con archi Manhattan
+    # Create graph with Manhattan edges
     G = nx.Graph()
 
-    # Aggiunta dei nodi al grafo
+    # Add nodes to the graph
     for key, value in nodes.items():
         G.add_node(key, **value, id=key)
 
-    # Aggiunta degli archi Manhattan al grafo
+    # Add Manhattan edges to the graph
     edges = []
     for i in range(len(nodes)):
         for j in range(i + 1, len(nodes)):
@@ -239,25 +239,25 @@ def create_suburban_geotype():
 
     G.add_weighted_edges_from(edges)
 
-    # Creazione del minimo albero coprente
+    # Create the minimum spanning tree
     T = nx.minimum_spanning_tree(G)
 
-    # Copia del grafo T per creare T_m
+    # Copy graph T to create T_m
     T_m = T.copy()
 
-    # Aggiunta dei nodi di tipo 4 (corner nodes) nel grafo T_m
+    # Add type 4 nodes (corner nodes) to graph T_m
     for (u, v) in list(T_m.edges()):
         pos_u = T_m.nodes[u]['position']
         pos_v = T_m.nodes[v]['position']
 
-        # Se necessario, aggiungi un nodo di tipo 4 per creare un angolo
+        # If needed, add a type 4 node to create a corner
         if pos_u[0] != pos_v[0] and pos_u[1] != pos_v[1]:
-            corner = (pos_u[0], pos_v[1])  # Crea un angolo
+            corner = (pos_u[0], pos_v[1])  # Create a corner
             corner_id = len(T_m.nodes)
-            T_m.add_node(corner_id, type=4, position=corner, id=corner_id)  # Aggiungi il nodo di tipo 4
+            T_m.add_node(corner_id, type=4, position=corner, id=corner_id)  # Add the type 4 node
             T_m.add_edge(u, corner_id, weight=manhattan_distance(pos_u, corner))
             T_m.add_edge(corner_id, v, weight=manhattan_distance(corner, pos_v))
-            T_m.remove_edge(u, v)  # Rimuovi l'arco diagonale
+            T_m.remove_edge(u, v)  # Remove the diagonal edge
 
     return T, T_m
 
@@ -267,7 +267,7 @@ def create_rural_geotype():
     nodes = {
         0: {'type': 0, 'position': (0, 0)},       # Nodo root
 
-        1: {'type': 1, 'position': (-3200, 3200)},  # Macro celle
+        1: {'type': 1, 'position': (-3200, 3200)},  # Macro cells
         2: {'type': 1, 'position': (3200, 3200)},
         3: {'type': 1, 'position': (0, 0)},
         4: {'type': 1, 'position': (-3200, -3200)},
@@ -282,18 +282,18 @@ def create_rural_geotype():
 
     }
 
-    # Funzione per calcolare la distanza di Manhattan tra due punti
+    # Function to compute Manhattan distance between two points
     def manhattan_distance(p1, p2):
         return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
-    # Creazione del grafo con archi Manhattan
+    # Create graph with Manhattan edges
     G = nx.Graph()
 
-    # Aggiunta dei nodi al grafo
+    # Add nodes to the graph
     for key, value in nodes.items():
         G.add_node(key, **value, id=key)
 
-    # Aggiunta degli archi Manhattan al grafo
+    # Add Manhattan edges to the graph
     edges = []
     for i in range(len(nodes)):
         for j in range(i + 1, len(nodes)):
@@ -304,25 +304,25 @@ def create_rural_geotype():
 
     G.add_weighted_edges_from(edges)
 
-    # Creazione del minimo albero coprente
+    # Create the minimum spanning tree
     T = nx.minimum_spanning_tree(G)
 
-    # Copia del grafo T per creare T_m
+    # Copy graph T to create T_m
     T_m = T.copy()
 
-    # Aggiunta dei nodi di tipo 4 (corner nodes) nel grafo T_m
+    # Add type 4 nodes (corner nodes) to graph T_m
     for (u, v) in list(T_m.edges()):
         pos_u = T_m.nodes[u]['position']
         pos_v = T_m.nodes[v]['position']
 
-        # Se necessario, aggiungi un nodo di tipo 4 per creare un angolo
+        # If needed, add a type 4 node to create a corner
         if pos_u[0] != pos_v[0] and pos_u[1] != pos_v[1]:
-            corner = (pos_u[0], pos_v[1])  # Crea un angolo
+            corner = (pos_u[0], pos_v[1])  # Create a corner
             corner_id = len(T_m.nodes)
-            T_m.add_node(corner_id, type=4, position=corner, id=corner_id)  # Aggiungi il nodo di tipo 4
+            T_m.add_node(corner_id, type=4, position=corner, id=corner_id)  # Add the type 4 node
             T_m.add_edge(u, corner_id, weight=manhattan_distance(pos_u, corner))
             T_m.add_edge(corner_id, v, weight=manhattan_distance(corner, pos_v))
-            T_m.remove_edge(u, v)  # Rimuovi l'arco diagonale
+            T_m.remove_edge(u, v)  # Remove the diagonal edge
 
     return T, T_m
 

@@ -1,4 +1,4 @@
-# Importare le librerie necessarie
+# Import required libraries
 import matplotlib.pyplot as plt
 import pandas as pd
 from fpdf import FPDF
@@ -13,7 +13,7 @@ from main_v9 import (
 )
 
 
-# Funzione per calcolare i costi e generare i grafici stacked
+# Function to compute costs and generate stacked charts
 def generate_stacked_cost_plot(T, term, scenario, save_path):
     solution_funcs = [
         ('Electronic', soluzione_1_with_smallcellswitch),
@@ -51,27 +51,27 @@ def generate_stacked_cost_plot(T, term, scenario, save_path):
     plt.close()
 
 
-# Funzione per creare il report PDF
+# Function to create the PDF report
 def create_report_pdf(output_path):
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
 
-    # Generare la topologia Dense Urban (T, T_m)
+    # Generate Dense Urban topology (T, T_m)
     T, T_m, _ = create_geotype('Dense Urban')
 
-    # Titolo del report
+    # Report title
     pdf.add_page()
     pdf.set_font('Arial', 'B', 16)
     pdf.cell(0, 10, 'Report per scenario Dense Urban', ln=True, align='C')
 
-    # Aggiungere l'immagine della topologia
+    # Add topology image
     pdf.ln(10)
     pdf.set_font('Arial', 'B', 12)
     pdf.cell(0, 10, 'Topologia Dense Urban con Nodi Corner (T_m)', ln=True, align='C')
     pdf.ln(10)
     pdf.image('dense_urban_topology.png', x=30, w=150)
 
-    # Aggiungere il grafico dei costi (short term)
+    # Add cost chart (short term)
     pdf.add_page()
     pdf.set_font('Arial', 'B', 12)
     pdf.cell(0, 10, 'Short Term Cost Breakdown', ln=True, align='C')
@@ -79,7 +79,7 @@ def create_report_pdf(output_path):
     generate_stacked_cost_plot(T, 'medium', 'Dense Urban', 'short_term_cost_breakdown.png')
     pdf.image('short_term_cost_breakdown.png', x=30, w=150)
 
-    # Aggiungere il grafico dei costi (long term)
+    # Add cost chart (long term)
     pdf.add_page()
     pdf.set_font('Arial', 'B', 12)
     pdf.cell(0, 10, 'Long Term Cost Breakdown', ln=True, align='C')
@@ -87,9 +87,9 @@ def create_report_pdf(output_path):
     generate_stacked_cost_plot(T, 'long', 'Dense Urban', 'long_term_cost_breakdown.png')
     pdf.image('long_term_cost_breakdown.png', x=30, w=150)
 
-    # Salvare il PDF
+    # Save the PDF
     pdf.output(output_path)
 
 
-# Eseguire la funzione per creare il report
+# Run the function to create the report
 create_report_pdf('Dense_Urban_Report.pdf')
