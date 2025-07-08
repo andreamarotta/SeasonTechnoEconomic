@@ -91,7 +91,7 @@ class RadioEquipment:
                 return 0
 
 
-# Definizione dell'enum per i tipi di Network Equipment
+# Enum definition for Network Equipment types
 class NetworkEquipmentTypeEnum(Enum):
     GREY_TRANSCEIVERS_1G_SR = "1G SR (100m) MMF"
     GREY_TRANSCEIVERS_10G_SR = "10G SR (100m) MMF"
@@ -133,7 +133,7 @@ class NetworkEquipmentTypeEnum(Enum):
     TRANSPONDER = "Transponder"
 
 
-# Definizione della classe NetworkEquipmentType
+# Definition of the NetworkEquipmentType class
 class NetworkEquipmentType:
     def __init__(self, name, data_rate, reach, price, normalized_price, max_power, typical_ff, insertion_loss=None,
                  size=None, note=None, capacity=None, num_ports=None):
@@ -151,7 +151,7 @@ class NetworkEquipmentType:
         self.num_ports = num_ports  # Aggiunta del nuovo attributo num_ports
 
 
-# Definizione globale dei tipi di network equipment
+# Global definition of network equipment types
 network_equipment_types = {
     NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_1G_SR: NetworkEquipmentType("1G SR (100m) MMF", 1, "100m MMF", 10.0,
                                                                            0.00, 1, "SFP"),
@@ -242,11 +242,11 @@ network_equipment_types = {
         "Media Converter 400G (400G XR -> 400G grey)", 400,
         "Usually it should not be necessary XR should be plugged directly in CO router", 5000.0, 0.50, 5, ""),
     NetworkEquipmentTypeEnum.TRANSPONDER: NetworkEquipmentType("Transponder", None, None, 4500.0, 0.90, 0, None, None,
-                                                               None, 4.33, num_ports=5)  # Aggiunto il numero di porte
+                                                               None, 4.33, num_ports=5)  # Added the number of ports
 }
 
 
-# Classe NetworkEquipment aggiornata
+# Updated NetworkEquipment class
 class NetworkEquipment:
     def __init__(self, equipment_type_enum):
         spec = network_equipment_types[equipment_type_enum]
@@ -271,23 +271,23 @@ class Fiber:
 def create_mst(numNodes=50, squareSize=200):
     halfSize = squareSize / 2
 
-    # Generazione dei punti casuali
+    # Generation of random points
     points = -halfSize + squareSize * np.random.rand(numNodes, 2)
-    points[0, :] = [0, 0]  # La radice dell'albero è fissata al punto (0,0)
+    points[0, :] = [0, 0]  # The root of the tree is fixed at (0,0)
 
-    # Creazione della matrice delle distanze di Manhattan
+    # Creation of the Manhattan distance matrix
     distances = np.zeros((numNodes, numNodes))
     for i in range(numNodes):
         for j in range(numNodes):
             distances[i, j] = np.sum(np.abs(points[i, :] - points[j, :]))
 
-    # Creazione del grafo con distanze di Manhattan
+    # Creation of the graph with Manhattan distances
     G = nx.Graph()
     for i in range(numNodes):
         for j in range(i + 1, numNodes):
             G.add_edge(i, j, weight=distances[i, j])
 
-    # Calcolo del minimum spanning tree utilizzando l'algoritmo di Prim
+    # Compute the minimum spanning tree using Prim's algorithm
     T = nx.minimum_spanning_tree(G, weight='weight', algorithm='prim')
 
     return T, points
@@ -296,12 +296,12 @@ def create_mst(numNodes=50, squareSize=200):
 def add_node_types(T, points):
     numNodes = len(T.nodes())
     types = np.random.randint(1, 3, numNodes)
-    types[0] = 0  # Il nodo all'origine è di tipo 0
+    types[0] = 0  # The node at the origin is of type 0
 
     for node in T.nodes():
         T.nodes[node]['type'] = types[node]
         T.nodes[node]['position'] = points[node]
-        T.nodes[node]['id'] = node  # Aggiungi ID del nodo
+        T.nodes[node]['id'] = node  # Add node ID
 
     return T, types
 
@@ -330,14 +330,14 @@ def add_properties(T):
 
 
 def add_specific_network_equipment(T, node, equipment_type_enum):
-    # Aggiungi un network equipment specifico al nodo basato sull'enum del tipo
+    # Add a specific network equipment to the node based on the enum type
     specific_equipment = NetworkEquipment(equipment_type_enum)
     if 'network_equipment' not in T.nodes[node]:
         T.nodes[node]['network_equipment'] = []
     T.nodes[node]['network_equipment'].append(specific_equipment)
 
 
-# Funzione per aggiungere un radio equipment specifico
+# Function to add a specific radio equipment
 def add_specific_radio_equipment(T, node, equipment_type_enum):
     specific_equipment = RadioEquipment(equipment_type_enum)
     if 'radio_equipment' not in T.nodes[node]:
@@ -400,14 +400,14 @@ def initialize_node_equipment(T):
 
 
 def allocate_capacity_macro(T, path, total_required_capacity):
-    # Crea una coppia di fibre per l'intero percorso e alloca la capacità totale
+    # Create a pair of fibers for the entire path and allocate the total capacity
     for i in range(len(path) - 1):
         u, v = path[i], path[i + 1]
 
         if 'fibers' not in T.edges[u, v]:
             T.edges[u, v]['fibers'] = []
 
-        # Crea due nuove fibre per l'intero percorso
+        # Create two new fibers for the entire path
         T.edges[u, v]['fibers'].append(Fiber())
         T.edges[u, v]['fibers'].append(Fiber())
 
@@ -418,11 +418,11 @@ def allocate_capacity_macro(T, path, total_required_capacity):
             for wavelength, current_capacity in fiber.wavelengths.items():
                 if current_capacity == 0:
                     fiber.wavelengths[wavelength] = total_required_capacity
-                    break  # Esci dal loop dopo aver occupato la capacità
+                    break  # Exit the loop after occupying the capacity
 
 
 def allocate_capacity_small(T, path, radio_equipment, term):
-    # Crea una coppia di fibre per ogni radio equipment e alloca la capacità specifica
+    # Create a pair of fibers for each radio equipment and allocate the specific capacity
     for radio_eq in radio_equipment:
         required_capacity = radio_eq.calculate_required_capacity(term)
 
@@ -432,7 +432,7 @@ def allocate_capacity_small(T, path, radio_equipment, term):
             if 'fibers' not in T.edges[u, v]:
                 T.edges[u, v]['fibers'] = []
 
-            # Crea due nuove fibre per ogni radio equipment
+            # Create two new fibers for each radio equipment
             T.edges[u, v]['fibers'].append(Fiber())
             T.edges[u, v]['fibers'].append(Fiber())
 
@@ -443,7 +443,7 @@ def allocate_capacity_small(T, path, radio_equipment, term):
                 for wavelength, current_capacity in fiber.wavelengths.items():
                     if current_capacity == 0:
                         fiber.wavelengths[wavelength] = required_capacity
-                        break  # Esci dal loop dopo aver occupato la capacità
+                        break  # Exit the loop after occupying the capacity
 
 
 def soluzione_1_with_smallcellswitch(T, term):
@@ -462,12 +462,12 @@ def soluzione_1_with_smallcellswitch(T, term):
         total_required_capacity = 0
         node_network_equipment = []
 
-        # Calcolare la capacità totale richiesta per il nodo
+        # Calculate the total capacity required for the node
         for radio_eq in T.nodes[node]['radio_equipment']:
             required_capacity = radio_eq.calculate_required_capacity(term)
             total_required_capacity += required_capacity
 
-            # Aggiungere una coppia di grey transceiver short SR per ogni radio equipment
+            # Add a pair of grey short SR transceivers for each radio equipment
             if required_capacity <= 1:
                 transceiver_type = NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_1G_SR
             elif required_capacity <= 10:
@@ -484,10 +484,10 @@ def soluzione_1_with_smallcellswitch(T, term):
             node_network_equipment.append(NetworkEquipment(transceiver_type))
             node_network_equipment.append(NetworkEquipment(transceiver_type))
 
-            # Aggiornare il consumo energetico `other_consumption` del nodo
+            # Update the node's `other_consumption` energy consumption
             T.nodes[node]['other_consumption'] += network_equipment_types[transceiver_type].max_power * 2
 
-        # Aggiungere il numero minimo di grey transceivers LR per coprire la capacità totale richiesta
+        # Add the minimum number of grey LR transceivers to cover the total required capacity
         remaining_capacity = total_required_capacity
         while remaining_capacity > 0:
             if remaining_capacity <= 1:
@@ -513,21 +513,21 @@ def soluzione_1_with_smallcellswitch(T, term):
             node_network_equipment.append(NetworkEquipment(transceiver_type))
             T.nodes[root_node]['network_equipment'].append(NetworkEquipment(transceiver_type))
 
-            # Allocare la capacità lungo il percorso verso il nodo radice
+            # Allocate capacity along the path to the root node
             path = nx.shortest_path(T, source=node, target=root_node)
             allocate_capacity_macro(T, path, transceiver_instance.data_rate)
 
-            # Aggiornare il consumo energetico `other_consumption` del nodo e del root
+            # Update the `other_consumption` energy usage for the node and the root
             T.nodes[node]['other_consumption'] += transceiver_instance.max_power
             T.nodes[root_node]['other_consumption'] += transceiver_instance.max_power
 
-        # Calcolare la capacità totale di tutti i transceiver SR e LR
+        # Calculate the total capacity of all SR and LR transceivers
         total_transceiver_capacity = sum(
             (ne.data_rate / 2 if "SR" in ne.equipment_type.name else ne.data_rate)
             for ne in node_network_equipment if ne.data_rate is not None
         )
 
-        # Scegliere la quantità switch in base alla capacità totale
+        # Choose the switch size based on the total capacity
         if total_transceiver_capacity > 0:
             if total_transceiver_capacity <= 400:
                 switch_type = NetworkEquipmentTypeEnum.SWITCH_SMALL
@@ -540,17 +540,17 @@ def soluzione_1_with_smallcellswitch(T, term):
 
             node_network_equipment.append(NetworkEquipment(switch_type))
 
-            # Aggiornare il consumo energetico `switching_consumption` del nodo in base allo switch aggiunto
+            # Update the node's `switching_consumption` based on the added switch
             T.nodes[node]['switching_consumption'] += calculate_switch_power_consumption(switch_type,
                                                                                          total_transceiver_capacity)
 
         T.nodes[node]['network_equipment'].extend(node_network_equipment)
 
-    # Aggiungere gli switch al nodo root e aggiornare il consumo energetico
+    # Add switches to the root node and update the energy consumption
     add_switches_to_root(T, root_node)
 
 
-# Funzione per calcolare il consumo energetico dello switch in base al suo tipo e alla capacità totale
+# Function to calculate the switch power consumption based on its type and total capacity
 def calculate_switch_power_consumption(switch_type, total_capacity):
     power_model = {
         NetworkEquipmentTypeEnum.SWITCH_SMALL: [(0, 125), (20, 131), (40, 137), (60, 144), (80, 150), (100, 156),
@@ -583,14 +583,14 @@ def calculate_switch_power_consumption(switch_type, total_capacity):
 def add_switches_to_root(T, root_node=0):
     total_capacity = 0
 
-    # Somma la capacità totale dei transceiver nel nodo root
+    # Sum the total capacity of the transceivers at the root node
     for equipment in T.nodes[root_node]['network_equipment']:
         if hasattr(equipment, 'data_rate') and equipment.data_rate is not None:
             total_capacity += equipment.data_rate
 
     total_capacity_for_energy = total_capacity
 
-    # Aggiungi switch finché tutta la capacità richiesta non è supportata
+    # Add switches until all required capacity is supported
     while total_capacity > 0:
         if total_capacity <= 400:
             switch_type = NetworkEquipmentTypeEnum.SWITCH_SMALL
@@ -603,7 +603,7 @@ def add_switches_to_root(T, root_node=0):
             total_capacity -= 3200
         else:
             switch_type = NetworkEquipmentTypeEnum.SWITCH_EXTRA_LARGE
-            total_capacity -= 6400  # Capacità dello switch extra large
+            total_capacity -= 6400  # Capacity of the extra large switch
 
         T.nodes[root_node]['network_equipment'].append(NetworkEquipment(switch_type))
         T.nodes[root_node]['switching_consumption'] += calculate_switch_power_consumption(switch_type,
@@ -612,9 +612,9 @@ def add_switches_to_root(T, root_node=0):
 
 def allocate_capacity_wdm_on_path_macro(T, path, radio_equipment, term):
     if not path:
-        return  # Se il percorso è vuoto, non fare nulla
+        return  # If the path is empty, do nothing
 
-    # Crea due nuove fibre per l'intero percorso
+    # Create two new fibers for the entire path
     new_fibers = [Fiber(), Fiber()]
 
     for i in range(len(path) - 1):
@@ -627,10 +627,10 @@ def allocate_capacity_wdm_on_path_macro(T, path, radio_equipment, term):
         if 'fibers' not in T.edges[u, v]:
             T.edges[u, v]['fibers'] = []
 
-        # Aggiungi le due nuove fibre all'edge corrente
+        # Add the two new fibers to the current edge
         T.edges[u, v]['fibers'].extend(new_fibers)
 
-        # Usa le fibre appena create per tutte le allocazioni di questo set di radio equipment
+        # Use the newly created fibers for all allocations of this set of radio equipment
         fibers_to_use = new_fibers
 
         for fiber in fibers_to_use:
@@ -639,17 +639,17 @@ def allocate_capacity_wdm_on_path_macro(T, path, radio_equipment, term):
                 for wavelength, current_capacity in fiber.wavelengths.items():
                     if current_capacity == 0:
                         fiber.wavelengths[wavelength] = required_capacity
-                        break  # Esci dal loop dopo aver occupato la capacità
+                        break  # Exit the loop after occupying the capacity
 
 
 def allocate_capacity_wdm_on_path_small(T, path, radio_equipment, term, with_mux=False):
     if with_mux:
-        # Se with_mux è True, richiama allocate_capacity_wdm_on_path_macro
+        # If with_mux is True, call allocate_capacity_wdm_on_path_macro
         allocate_capacity_wdm_on_path_macro(T, path, radio_equipment, term)
         return
 
     if not path:
-        return  # Se il percorso è vuoto, non fare nulla
+        return  # If the path is empty, do nothing
 
     for i in range(len(path) - 1):
         u, v = path[i], path[i + 1]
@@ -661,7 +661,7 @@ def allocate_capacity_wdm_on_path_small(T, path, radio_equipment, term, with_mux
         if 'fibers' not in T.edges[u, v]:
             T.edges[u, v]['fibers'] = []
 
-        # Aggiungi due nuove fibre per ogni radio equipment
+        # Add two new fibers for each radio equipment
         T.edges[u, v]['fibers'].append(Fiber())
         T.edges[u, v]['fibers'].append(Fiber())
 
@@ -675,15 +675,15 @@ def allocate_capacity_wdm_on_path_small(T, path, radio_equipment, term, with_mux
                     if current_capacity == 0:
                         fiber.wavelengths[wavelength] = required_capacity
                         allocated_wavelengths += 1
-                        break  # Esci dal loop dopo aver occupato la capacità
+                        break  # Exit the loop after occupying the capacity
                 if allocated_wavelengths >= len(radio_equipment):
                     break
 
 
 def add_required_transponders(T, node):
     """
-    Aggiunge il numero necessario di transponder a un nodo e al nodo root,
-    in base al numero di WDM transceivers presenti nel nodo.
+    Adds the required number of transponders to a node and to the root node,
+    based on the number of WDM transceivers present in the node.
     """
     wdm_transceivers_count = sum(
         1 for eq in T.nodes[node]['network_equipment'] if 'WDM_TRANSCEIVERS' in eq.equipment_type.name
@@ -692,22 +692,22 @@ def add_required_transponders(T, node):
     transponder_type = NetworkEquipmentTypeEnum.TRANSPONDER
     transponder_ports = network_equipment_types[transponder_type].num_ports
 
-    # Calcola quanti transponder servono per coprire tutti i WDM transceivers
+    # Calculate how many transponders are needed to cover all WDM transceivers
     num_transponders_needed = (wdm_transceivers_count + transponder_ports - 1) // transponder_ports
 
-    # Aggiungi i transponder necessari al nodo e al nodo root
+    # Add the required transponders to the node and the root node
     for _ in range(num_transponders_needed):
         transponder_instance = NetworkEquipment(transponder_type)
 
-        # Aggiungi il transponder al nodo
+        # Add the transponder to the node
         T.nodes[node]['network_equipment'].append(transponder_instance)
         T.nodes[node]['other_consumption'] += network_equipment_types[transponder_type].max_power
 
 
 def add_required_transponders_to_root(T, root_node):
     """
-    Aggiunge il numero necessario di transponder a un nodo e al nodo root,
-    in base al numero di WDM transceivers presenti nel nodo.
+    Adds the required number of transponders to a node and to the root node,
+    based on the number of WDM transceivers present in the node.
     """
 
     wdm_transceivers_count = sum(
@@ -717,14 +717,14 @@ def add_required_transponders_to_root(T, root_node):
     transponder_type = NetworkEquipmentTypeEnum.TRANSPONDER
     transponder_ports = network_equipment_types[transponder_type].num_ports
 
-    # Calcola quanti transponder servono per coprire tutti i WDM transceivers
+    # Calculate how many transponders are needed to cover all WDM transceivers
     num_transponders_needed = (wdm_transceivers_count + transponder_ports - 1) // transponder_ports
 
-    # Aggiungi i transponder necessari al nodo e al nodo root
+    # Add the required transponders to the node and the root node
     for _ in range(num_transponders_needed):
         transponder_instance = NetworkEquipment(transponder_type)
 
-        # Aggiungi il transponder al root
+        # Add the transponder to the root
         T.nodes[root_node]['network_equipment'].append(transponder_instance)
         T.nodes[root_node]['other_consumption'] += network_equipment_types[transponder_type].max_power
 
@@ -742,11 +742,11 @@ def soluzione_2_with_smallcellmux(T, term):
 
         node_type = T.nodes[node]['type']
 
-        if node_type == 1:  # Nodo macro
+        if node_type == 1:  # Macro node
             for radio_eq in T.nodes[node]['radio_equipment']:
                 required_capacity = radio_eq.calculate_required_capacity(term)
 
-                # Aggiungere una coppia di transceiver short SR di sufficiente capacità
+                # Add a pair of short SR transceivers with sufficient capacity
                 if required_capacity <= 1:
                     transceiver_type = NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_1G_SR
                     wdm_transceiver_type = NetworkEquipmentTypeEnum.WDM_TRANSCEIVERS_1G_LR
@@ -766,7 +766,7 @@ def soluzione_2_with_smallcellmux(T, term):
                     transceiver_type = NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_400G_SR
                     wdm_transceiver_type = NetworkEquipmentTypeEnum.WDM_TRANSCEIVERS_400G_LR
 
-                # Aggiungere i transceiver grey e WDM al nodo e al root
+                # Add grey and WDM transceivers to the node and the root
                 # una coppia di SR e un WDM LR
                 node_network_equipment.append(NetworkEquipment(transceiver_type))
                 node_network_equipment.append(NetworkEquipment(transceiver_type))
@@ -776,27 +776,27 @@ def soluzione_2_with_smallcellmux(T, term):
                 root_network_equipment.append(NetworkEquipment(transceiver_type))
                 root_network_equipment.append(NetworkEquipment(wdm_transceiver_type))
 
-                # Aggiornare il consumo energetico `other_consumption` del nodo e del root
+                # Update the `other_consumption` energy for the node and the root
                 T.nodes[node]['other_consumption'] += network_equipment_types[transceiver_type].max_power * 2
                 T.nodes[node]['other_consumption'] += network_equipment_types[wdm_transceiver_type].max_power
                 T.nodes[root_node]['other_consumption'] += network_equipment_types[transceiver_type].max_power * 2
                 T.nodes[root_node]['other_consumption'] += network_equipment_types[wdm_transceiver_type].max_power
 
-            # Aggiungere WDM multiplexer solo se il numero di radio equipment è maggiore di 0
+            # Add a WDM multiplexer only if the number of radio equipments is greater than 0
             if len(T.nodes[node]['radio_equipment']) > 0:
                 multiplexer_type = NetworkEquipmentTypeEnum.WDM_MUX
                 node_network_equipment.append(NetworkEquipment(multiplexer_type))
                 root_network_equipment.append(NetworkEquipment(multiplexer_type))
 
-                # Aggiornare il consumo energetico `other_consumption` del nodo e del root
+                # Update the `other_consumption` energy for the node and the root
                 T.nodes[node]['other_consumption'] += network_equipment_types[multiplexer_type].max_power
                 T.nodes[root_node]['other_consumption'] += network_equipment_types[multiplexer_type].max_power
 
-        elif node_type == 2:  # Nodo small
+        elif node_type == 2:  # Small node
             for radio_eq in T.nodes[node]['radio_equipment']:
                 required_capacity = radio_eq.calculate_required_capacity(term)
 
-                # Aggiungere una coppia di transceiver short SR di sufficiente capacità
+                # Add a pair of short SR transceivers with sufficient capacity
                 if required_capacity <= 1:
                     transceiver_type = NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_1G_SR
                     wdm_transceiver_type = NetworkEquipmentTypeEnum.WDM_TRANSCEIVERS_1G_LR
@@ -816,7 +816,7 @@ def soluzione_2_with_smallcellmux(T, term):
                     transceiver_type = NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_400G_SR
                     wdm_transceiver_type = NetworkEquipmentTypeEnum.WDM_TRANSCEIVERS_400G_LR
 
-                # Aggiungere i transceiver grey e WDM al nodo e al root
+                # Add grey and WDM transceivers to the node and the root
                 # una coppia di SR e un WDM LR
                 node_network_equipment.append(NetworkEquipment(transceiver_type))
                 node_network_equipment.append(NetworkEquipment(transceiver_type))
@@ -826,29 +826,29 @@ def soluzione_2_with_smallcellmux(T, term):
                 root_network_equipment.append(NetworkEquipment(transceiver_type))
                 root_network_equipment.append(NetworkEquipment(wdm_transceiver_type))
 
-                # Aggiornare il consumo energetico `other_consumption` del nodo e del root
+                # Update the `other_consumption` energy for the node and the root
                 T.nodes[node]['other_consumption'] += network_equipment_types[transceiver_type].max_power * 2
                 T.nodes[node]['other_consumption'] += network_equipment_types[wdm_transceiver_type].max_power
                 T.nodes[root_node]['other_consumption'] += network_equipment_types[transceiver_type].max_power * 2
                 T.nodes[root_node]['other_consumption'] += network_equipment_types[wdm_transceiver_type].max_power
 
-            # Aggiungere WDM multiplexer solo se il numero di radio equipment è maggiore di 0
+            # Add a WDM multiplexer only if the number of radio equipments is greater than 0
             if len(T.nodes[node]['radio_equipment']) > 0:
                 multiplexer_type = NetworkEquipmentTypeEnum.WDM_MUX
                 node_network_equipment.append(NetworkEquipment(multiplexer_type))
                 root_network_equipment.append(NetworkEquipment(multiplexer_type))
 
-                # Aggiornare il consumo energetico `other_consumption` del nodo e del root
+                # Update the `other_consumption` energy for the node and the root
                 T.nodes[node]['other_consumption'] += network_equipment_types[multiplexer_type].max_power
                 T.nodes[root_node]['other_consumption'] += network_equipment_types[multiplexer_type].max_power
 
         T.nodes[node]['network_equipment'].extend(node_network_equipment)
         T.nodes[root_node]['network_equipment'].extend(root_network_equipment)
 
-        # Aggiungi i transponder necessari in base al numero di WDM transceivers
+        # Add the required transponders based on the number of WDM transceivers
         add_required_transponders(T, node)
 
-        # Allocare la capacità lungo il percorso verso il nodo radice
+        # Allocate capacity along the path to the root node
         path = nx.shortest_path(T, source=node, target=root_node)
 
         if node_type == 1:  # Macro node
@@ -857,7 +857,7 @@ def soluzione_2_with_smallcellmux(T, term):
             allocate_capacity_wdm_on_path_small(T, path, T.nodes[node]['radio_equipment'], term, True)
 
     add_required_transponders_to_root(T, root_node)
-    # Aggiungere lo switch extra large nel nodo root
+    # Add the extra large switch at the root node
     add_switches_to_root(T, root_node)
 
 
@@ -879,16 +879,16 @@ def allocate_capacity_xr_on_path_macro(T, path, total_capacity):
             for wavelength, current_capacity in fiber.wavelengths.items():
                 if current_capacity == 0:
                     fiber.wavelengths[wavelength] = total_capacity
-                    break  # Esci dal loop dopo aver occupato la capacità
+                    break  # Exit the loop after occupying the capacity
 
 
 def calculate_switch_energy(switch_type, total_traffic_gbps):
     """
-    Calcola il consumo energetico di uno switch in base al tipo e al traffico totale gestito.
+    Calculate the energy consumption of a switch based on its type and the total traffic handled.
 
-    :param switch_type: Tipo di switch ("Small", "Medium", "Large", "Extra Large")
-    :param total_traffic_gbps: Traffico totale gestito dallo switch in Gbps
-    :return: Consumo energetico in Watt
+    :param switch_type: Switch type ("Small", "Medium", "Large", "Extra Large")
+    :param total_traffic_gbps: Total traffic handled by the switch in Gbps
+    :return: Energy consumption in Watts
     """
     # Modelli di consumo energetico in base al tipo di switch e traffico
     power_model = {
@@ -925,13 +925,13 @@ def calculate_switch_energy(switch_type, total_traffic_gbps):
             # Interpolazione lineare tra i due punti
             return power_1 + (power_2 - power_1) * (total_traffic_gbps - traffic_1) / (traffic_2 - traffic_1)
 
-    # Se il traffico totale è maggiore del massimo valore nel modello, restituisci l'ultimo valore di consumo
+    # If the total traffic exceeds the maximum value in the model, return the last consumption value
     return model[-1][1]
 
 
 def allocate_capacity_xr_on_path_small(T, path, radio_equipment, term):
     if not path:
-        return  # Se il percorso è vuoto, non fare nulla
+        return  # If the path is empty, do nothing
 
     for radio_eq in radio_equipment:
         required_capacity = radio_eq.calculate_required_capacity(term)
@@ -942,7 +942,7 @@ def allocate_capacity_xr_on_path_small(T, path, radio_equipment, term):
             if 'fibers' not in T.edges[u, v]:
                 T.edges[u, v]['fibers'] = []
 
-            # Aggiungi due nuove fibre per ogni radio equipment
+            # Add two new fibers for each radio equipment
             T.edges[u, v]['fibers'].append(Fiber())
             T.edges[u, v]['fibers'].append(Fiber())
 
@@ -953,13 +953,13 @@ def allocate_capacity_xr_on_path_small(T, path, radio_equipment, term):
                 for wavelength, current_capacity in fiber.wavelengths.items():
                     if current_capacity == 0:
                         fiber.wavelengths[wavelength] = required_capacity
-                        break  # Esci dal loop dopo aver occupato la capacità
+                        break  # Exit the loop after occupying the capacity
 
 
 def soluzione_3_with_smallcellaggr(T, term):
     initialize_node_equipment(T)
     root_node = 0
-    total_root_capacity = 0  # Capacità totale che verrà servita dal root
+    total_root_capacity = 0  # Total capacity that will be served by the root
 
     for node in T.nodes():
         if node == root_node:
@@ -968,11 +968,11 @@ def soluzione_3_with_smallcellaggr(T, term):
         total_node_transceiver_capacity = 0
         node_network_equipment = []
 
-        # Itera su ogni radio equipment del nodo
+        # Iterate over each radio equipment of the node
         for radio_eq in T.nodes[node]['radio_equipment']:
             required_capacity = radio_eq.calculate_required_capacity(term)
 
-            # Aggiungi una coppia di transceiver SR di sufficiente capacità
+            # Add a pair of SR transceivers with sufficient capacity
             if required_capacity <= 25:
                 transceiver_type = NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_25G_SR
             elif required_capacity <= 50:
@@ -985,13 +985,13 @@ def soluzione_3_with_smallcellaggr(T, term):
             node_network_equipment.append(NetworkEquipment(transceiver_type))
             node_network_equipment.append(NetworkEquipment(transceiver_type))
 
-            # Incrementiamo la capacità del transceiver selezionato (data_rate)
+            # Increase the capacity of the selected transceiver (data_rate)
             total_node_transceiver_capacity += network_equipment_types[transceiver_type].data_rate
 
-            # Aggiornare il consumo energetico `other_consumption` del nodo
+            # Update the node's `other_consumption` energy usage
             T.nodes[node]['other_consumption'] += 2 * network_equipment_types[transceiver_type].max_power
 
-        # Aggiungi i media converter e i relativi XR modules necessari per servire la capacità totale del nodo
+        # Add media converters and related XR modules needed to serve the node's total capacity
         remaining_capacity = total_node_transceiver_capacity
         media_converter_capacity = 0
 
@@ -1030,7 +1030,7 @@ def soluzione_3_with_smallcellaggr(T, term):
             node_network_equipment.append(NetworkEquipment(media_converter_type))
             node_network_equipment.append(NetworkEquipment(xr_module_type))
 
-            # Aggiornare il consumo energetico `other_consumption` del nodo
+            # Update the node's `other_consumption` energy usage
             T.nodes[node]['other_consumption'] += (network_equipment_types[media_converter_type].max_power +
                                                    network_equipment_types[xr_module_type].max_power)
 
@@ -1038,11 +1038,11 @@ def soluzione_3_with_smallcellaggr(T, term):
         T.nodes[node]['network_equipment'].extend(node_network_equipment)
         total_root_capacity += total_node_capacity
 
-        # Allocare la capacità lungo il percorso verso il nodo radice
+        # Allocate capacity along the path to the root node
         path = nx.shortest_path(T, source=node, target=root_node)
         allocate_capacity_xr_on_path_macro(T, path, total_node_capacity)
 
-    # Aggiungi XR module nel nodo root per servire la capacità totale di tutti i media converter
+    # Add XR modules at the root node to serve the total capacity of all media converters
     remaining_root_capacity = total_root_capacity
 
     while remaining_root_capacity > 0:
@@ -1064,10 +1064,10 @@ def soluzione_3_with_smallcellaggr(T, term):
 
         T.nodes[root_node]['network_equipment'].append(NetworkEquipment(xr_module_type))
 
-        # Aggiornare il consumo energetico `other_consumption` del nodo root
+        # Update the root node's `other_consumption` energy usage
         T.nodes[root_node]['other_consumption'] += network_equipment_types[xr_module_type].max_power
 
-    # Aggiungi lo switch extra large al nodo root e aggiorna il consumo energetico
+    # Add the extra large switch at the root node and update the energy consumption
     add_switches_to_root(T, root_node)
 
 
@@ -1077,7 +1077,7 @@ from itertools import combinations
 def soluzione_3_with_smallcellaggr_with_preaggregation(T, term):
     initialize_node_equipment(T)
     root_node = 0
-    total_root_capacity = 0  # Capacità totale che verrà servita dal root
+    total_root_capacity = 0  # Total capacity that will be served by the root
 
     for node in T.nodes():
         if node == root_node:
@@ -1086,40 +1086,40 @@ def soluzione_3_with_smallcellaggr_with_preaggregation(T, term):
         total_node_transceiver_capacity = 0
         node_network_equipment = []
 
-        # Creiamo un set di radio equipment che richiedono meno di 25 Gbps di capacità
+        # Create a set of radio equipment that require less than 25 Gbps of capacity
         preaggregable = [radio_eq for radio_eq in T.nodes[node]['radio_equipment'] if
                          radio_eq.calculate_required_capacity(term) < 25]
 
-        # Troviamo tutte le combinazioni di radio equipment che possono essere pre-aggregati insieme
+        # Find all combinations of radio equipment that can be pre-aggregated together
         preaggregated_radio_equipments = set()
         preaggregated_capacity = 0
-        preaggregability = False  # Inizialmente impostiamo preaggregability su False
+        preaggregability = False  # Initially set preaggregability to False
 
         for r in range(2, 6):
-            # Trova tutte le combinazioni di lunghezza r
+            # Find all combinations of length r
             combinations_list = list(combinations(preaggregable, r))
 
             for combination in combinations_list:
                 combination_capacity = sum(radio_eq.calculate_required_capacity(term) for radio_eq in combination)
                 if combination_capacity <= 25:
-                    # Imposta preaggregability su True se almeno una combinazione è valida
+                    # Set preaggregability to True if at least one combination is valid
                     preaggregability = True
-                    # Aggiungi ogni radio equipment della combinazione valida all'elenco degli equipment preaggregati
+                    # Add each radio equipment of the valid combination to the list of pre-aggregated equipment
                     preaggregated_radio_equipments.update(combination)
 
-        # Calcola la capacità totale dei radio equipment preaggregati
+        # Calculate the total capacity of the pre-aggregated radio equipment
         preaggregated_capacity = sum(
             radio_eq.calculate_required_capacity(term) for radio_eq in preaggregated_radio_equipments)
 
-        # Convertilo in lista (opzionale, se necessario)
+        # Convert it into a list (optional, if needed)
         preaggregated_radio_equipments = list(preaggregated_radio_equipments)
 
-        # Separiamo i radio equipment non pre-aggregabili
+        # Separate the radio equipment that cannot be pre-aggregated
         other_radio_equipments = [radio_eq for radio_eq in T.nodes[node]['radio_equipment'] if
                                   radio_eq not in preaggregated_radio_equipments]
 
         if preaggregability:
-            # Aggiungi transceiver grigi per i radio equipment preaggregati
+            # Add grey transceivers for the pre-aggregated radio equipment
             for radio_eq in preaggregated_radio_equipments:
                 required_capacity = radio_eq.calculate_required_capacity(term)
                 if required_capacity <= 1:
@@ -1138,10 +1138,10 @@ def soluzione_3_with_smallcellaggr_with_preaggregation(T, term):
                 node_network_equipment.append(NetworkEquipment(transceiver_type))
                 node_network_equipment.append(NetworkEquipment(transceiver_type))
 
-                # Aggiornare il consumo energetico `other_consumption` del nodo
+                # Update the node's `other_consumption` energy usage
                 T.nodes[node]['other_consumption'] += 2 * network_equipment_types[transceiver_type].max_power
 
-            # Aggiungi transceiver grigi per coprire la capacità totale preaggregata
+            # Add grey transceivers to cover the total pre-aggregated capacity
             remaining_capacity = preaggregated_capacity
             while remaining_capacity > 0:
                 transceiver_type = NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_25G_SR
@@ -1150,10 +1150,10 @@ def soluzione_3_with_smallcellaggr_with_preaggregation(T, term):
                 node_network_equipment.append(NetworkEquipment(transceiver_type))
                 total_node_transceiver_capacity += network_equipment_types[transceiver_type].data_rate
 
-                # Aggiornare il consumo energetico `other_consumption` del nodo
+                # Update the node's `other_consumption` energy usage
                 T.nodes[node]['other_consumption'] += network_equipment_types[transceiver_type].max_power * 2
 
-            # Aggiungi uno switch per supportare la capacità totale preaggregata
+            # Add a switch to support the total pre-aggregated capacity
             if preaggregated_capacity > 0:
                 if preaggregated_capacity <= 400:
                     switch_type = NetworkEquipmentTypeEnum.SWITCH_SMALL
@@ -1166,15 +1166,15 @@ def soluzione_3_with_smallcellaggr_with_preaggregation(T, term):
 
                 node_network_equipment.append(NetworkEquipment(switch_type))
 
-                # Aggiornare il consumo energetico `switching_consumption` del nodo
+                # Update the node's `switching_consumption` energy usage
                 T.nodes[node]['switching_consumption'] += calculate_switch_power_consumption(switch_type,
                                                                                              preaggregated_capacity)
 
-        # Itera sui restanti radio equipment non preaggregati
+        # Iterate over the remaining radio equipment that is not pre-aggregated
         for radio_eq in other_radio_equipments:
             required_capacity = radio_eq.calculate_required_capacity(term)
 
-            # Aggiungi una coppia di transceiver SR di sufficiente capacità
+            # Add a pair of SR transceivers with sufficient capacity
             if required_capacity <= 25:
                 transceiver_type = NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_25G_SR
             elif required_capacity <= 50:
@@ -1186,13 +1186,13 @@ def soluzione_3_with_smallcellaggr_with_preaggregation(T, term):
 
             node_network_equipment.append(NetworkEquipment(transceiver_type))
             node_network_equipment.append(NetworkEquipment(transceiver_type))
-            # Incrementiamo la capacità del transceiver selezionato (data_rate)
+            # Increase the capacity of the selected transceiver (data_rate)
             total_node_transceiver_capacity += network_equipment_types[transceiver_type].data_rate
 
-            # Aggiornare il consumo energetico `other_consumption` del nodo
+            # Update the node's `other_consumption` energy usage
             T.nodes[node]['other_consumption'] += 2 * network_equipment_types[transceiver_type].max_power
 
-        # Aggiungi i media converter e i relativi XR modules necessari per servire la capacità totale del nodo
+        # Add media converters and related XR modules needed to serve the node's total capacity
         remaining_capacity = total_node_transceiver_capacity
         media_converter_capacity = 0
         while remaining_capacity > 0:
@@ -1230,7 +1230,7 @@ def soluzione_3_with_smallcellaggr_with_preaggregation(T, term):
             node_network_equipment.append(NetworkEquipment(media_converter_type))
             node_network_equipment.append(NetworkEquipment(xr_module_type))
 
-            # Aggiornare il consumo energetico `other_consumption` del nodo
+            # Update the node's `other_consumption` energy usage
             T.nodes[node]['other_consumption'] += (network_equipment_types[media_converter_type].max_power +
                                                    network_equipment_types[xr_module_type].max_power)
 
@@ -1238,11 +1238,11 @@ def soluzione_3_with_smallcellaggr_with_preaggregation(T, term):
         T.nodes[node]['network_equipment'].extend(node_network_equipment)
         total_root_capacity += total_node_capacity
 
-        # Allocare la capacità lungo il percorso verso il nodo radice
+        # Allocate capacity along the path to the root node
         path = nx.shortest_path(T, source=node, target=root_node)
         allocate_capacity_xr_on_path_macro(T, path, total_node_capacity)
 
-    # Aggiungi XR module nel nodo root per servire la capacità totale di tutti i media converter
+    # Add XR modules at the root node to serve the total capacity of all media converters
     remaining_root_capacity = total_root_capacity
     while remaining_root_capacity > 0:
         if remaining_root_capacity <= 25:
@@ -1263,10 +1263,10 @@ def soluzione_3_with_smallcellaggr_with_preaggregation(T, term):
 
         T.nodes[root_node]['network_equipment'].append(NetworkEquipment(xr_module_type))
 
-        # Aggiornare il consumo energetico `other_consumption` del nodo root
+        # Update the root node's `other_consumption` energy usage
         T.nodes[root_node]['other_consumption'] += network_equipment_types[xr_module_type].max_power
 
-    # Aggiungi lo switch extra large al nodo root
+    # Add the extra large switch at the root node
     add_switches_to_root(T, root_node)
 
 
@@ -1301,7 +1301,7 @@ def print_network_equipment_info(T, node):
 def draw_simple_graph(T):
     pos = {node: T.nodes[node]['position'] for node in T.nodes()}
     types = [T.nodes[node]['type'] for node in T.nodes()]
-    labels = {node: node for node in T.nodes()}  # Aggiungi etichette per i nodi
+    labels = {node: node for node in T.nodes()}  # Add labels for the nodes
 
     plt.figure()
     nx.draw(T, pos, with_labels=True, labels=labels, node_size=100, node_color=types, cmap=plt.cm.rainbow,
@@ -1317,7 +1317,7 @@ def draw_simple_graph(T):
 def draw_graph_by_fiber_occupation(T):
     pos = {node: T.nodes[node]['position'] for node in T.nodes()}
     types = [T.nodes[node]['type'] for node in T.nodes()]
-    labels = {node: node for node in T.nodes()}  # Aggiungi etichette per i nodi
+    labels = {node: node for node in T.nodes()}  # Add labels for the nodes
 
     edges = T.edges()
     widths = []
@@ -1343,7 +1343,7 @@ def draw_graph_by_fiber_occupation(T):
 def draw_graph_by_capacity_occupation(T):
     pos = {node: T.nodes[node]['position'] for node in T.nodes()}
     types = [T.nodes[node]['type'] for node in T.nodes()]
-    labels = {node: node for node in T.nodes()}  # Aggiungi etichette per i nodi
+    labels = {node: node for node in T.nodes()}  # Add labels for the nodes
 
     edges = T.edges()
     widths = []
@@ -1445,11 +1445,11 @@ def run_tests_for_solution(soluzione_fn, name, results_list):
             deploy_radio_equipment(T, term, scenario)
             # Deploy network infrastructure based on the solution function
             soluzione_fn(T, term)
-            # Calcolare il costo totale
+            # Calculate the total cost
             total_cost = calculate_total_cost(T)
-            # Calcolare il costo normalizzato rispetto all'area
+            # Calculate the cost normalized by area
             normalized_cost = total_cost / A
-            # Aggiungere i risultati alla lista
+            # Add the results to the list
             results_list.append({'Soluzione': name, 'Temporal Scenario': term, 'Deployment Scenario': scenario,
                                  'Total Cost': total_cost, 'Normalized Cost': normalized_cost})
 
@@ -1472,7 +1472,7 @@ print("RUNNED TESTS")
 # Convertire la lista in un DataFrame
 results_df = pd.DataFrame(results_list)
 
-# Aggiornare i nomi delle soluzioni per le versioni "wo" e "with" con una distinzione più chiara
+# Update solution names for the "wo" and "with" versions with a clearer distinction
 results_df['Soluzione'] = results_df['Soluzione'].replace({
     # 'P2P wo': 'P2P wo',
     # 'WDM wo': 'WDM wo',
@@ -1483,11 +1483,11 @@ results_df['Soluzione'] = results_df['Soluzione'].replace({
     'P2MP-WP with': 'P2MP-WP with'
 })
 
-# Determinare il valore massimo dell'asse y per il costo totale
-y_max_total = results_df['Total Cost'].max() * 1.1  # Aggiungi un 10% di margine
+# Determine the maximum y-axis value for total cost
+y_max_total = results_df['Total Cost'].max() * 1.1  # Add a 10% margin
 
-# Determinare il valore massimo dell'asse y per il costo normalizzato
-y_max_normalized = results_df['Normalized Cost'].max() * 1.1  # Aggiungi un 10% di margine
+# Determine the maximum y-axis value for normalized cost
+y_max_normalized = results_df['Normalized Cost'].max() * 1.1  # Add a 10% margin
 '''
 # Creare grafici del costo totale per ogni scenario di deployment (versioni "wo")
 for scenario in deployment_scenarios:
@@ -1600,12 +1600,12 @@ for term in temporal_scenarios:
                                    (soluzione_3_with_smallcellaggr_with_preaggregation, 'P2MP-WP')]:
             # Deploy network infrastructure based on the solution function
             soluzione_fn(T, term)
-            # Calcolare il costo totale
+            # Calculate the total cost
             total_cost = calculate_total_cost(T)
-            # Calcolare la cost efficiency
+            # Calculate the cost efficiency
             print(f"Calculating cost efficiency for solution {soluzione_fn} for scenario {scenario} in the {term} term")
             cost_efficiency = calculate_cost_efficiency(T, total_cost, term)
-            # Aggiungere i risultati alla lista
+            # Add the results to the list
             cost_efficiency_results.append({
                 'Soluzione': name,
                 'Temporal Scenario': term,
@@ -1616,8 +1616,8 @@ for term in temporal_scenarios:
 # Convertire la lista in un DataFrame
 cost_efficiency_df = pd.DataFrame(cost_efficiency_results)
 
-# Determinare il valore massimo dell'asse y per fissare la scala
-y_max_efficiency = cost_efficiency_df['Cost Efficiency'].max() * 1.1  # Aggiungi un 10% di margine
+# Determine the maximum y-axis value to set the scale
+y_max_efficiency = cost_efficiency_df['Cost Efficiency'].max() * 1.1  # Add a 10% margin
 '''
 # Creare grafici della cost efficiency per ogni scenario di deployment
 for scenario in deployment_scenarios:
@@ -1641,7 +1641,7 @@ def calculate_network_efficiency(T, term):
     total_required_capacity = sum([radio_eq.calculate_required_capacity(term) for node in T.nodes() for radio_eq in
                                    T.nodes[node]['radio_equipment']])  # DS and US
 
-    # Calcolare la somma della capacità di tutti i transceiver SR, LR, e XR
+    # Calculate the sum of the capacity of all SR, LR, and XR transceivers
     total_deployed_capacity = 0
     for node in T.nodes():
         for equipment in T.nodes[node]['network_equipment']:
@@ -1690,9 +1690,9 @@ for soluzione_fn, name in [
             deploy_radio_equipment(T, term, scenario)
             # Deploy network infrastructure based on the solution function
             soluzione_fn(T, term)
-            # Calcolare la network efficiency
+            # Calculate the network efficiency
             network_efficiency = calculate_network_efficiency(T, term)
-            # Aggiungere i risultati alla lista
+            # Add the results to the list
             network_efficiency_results.append({
                 'Soluzione': name,
                 'Temporal Scenario': term,
@@ -1711,7 +1711,7 @@ for scenario in deployment_scenarios:
         network_efficiency_df['Soluzione'].isin(['P2P', 'WDM', 'P2MP', 'P2MP-WP'])],
                 x='Soluzione', y='Network Efficiency', hue='Temporal Scenario', errorbar=None, palette='pastel')
 
-    plt.ylim(0, 1)  # La network efficiency è un rapporto, quindi normalmente dovrebbe essere tra 0 e 1
+    plt.ylim(0, 1)  # Network efficiency is a ratio, so it should normally be between 0 and 1
     plt.xlabel('Solutions')
     plt.ylabel('Network TX Efficiency (Total Required FH Capacity / Deployed Capacity)')
     plt.title(f'Network TX Efficiency for {scenario} Scenario with Small Cell Aggregation')
@@ -1724,11 +1724,11 @@ for scenario in deployment_scenarios:
 ##FIBER UTILIZATION
 
 def calculate_fiber_utilization(T, term):
-    # Calcolare la capacità totale richiesta
+    # Calculate the total required capacity
     total_required_capacity = sum([radio_eq.calculate_required_capacity(term) for node in T.nodes() for radio_eq in
                                    T.nodes[node]['radio_equipment']])
 
-    # Contare il numero totale di fibre nel grafo
+    # Count the total number of fibers in the graph
     total_fibers = sum([len(T.edges[u, v]['fibers']) for u, v in T.edges() if 'fibers' in T.edges[u, v]])
 
     if total_fibers > 0:
@@ -1753,9 +1753,9 @@ for name, soluzione_fn in [('P2P', soluzione_1_with_smallcellswitch),
             deploy_radio_equipment(T, term, scenario)
             # Deploy network infrastructure based on the solution function
             soluzione_fn(T, term)
-            # Calcolare la fiber utilization
+            # Calculate the fiber utilization
             fiber_utilization = calculate_fiber_utilization(T, term)
-            # Aggiungere i risultati alla lista
+            # Add the results to the list
             results_fiber_utilization.append({
                 'Soluzione': name,
                 'Temporal Scenario': term,
@@ -2027,7 +2027,7 @@ def format_node_details_for_report(node_details, radio_details, styles):
             [eq['type'], eq['quantity'], f"{eq['individual_capacity']} Gbps", f"{eq['total_required_capacity']} Gbps"]
             for eq in radio_details
         ])
-        # Calcolare la capacità totale richiesta
+        # Calculate the total required capacity
         total_required_capacity = sum(eq['total_required_capacity'] for eq in radio_details)
         table = Table(table_data)
         table.setStyle(TableStyle([
@@ -2042,7 +2042,7 @@ def format_node_details_for_report(node_details, radio_details, styles):
         elements.append(table)
         elements.append(Spacer(1, 0.1 * inch))
 
-        # Aggiungi la riga con la capacità totale richiesta
+        # Add the row with the total required capacity
         elements.append(Paragraph(f"Total Required Capacity: {total_required_capacity} Gbps", styles['Normal']))
         elements.append(Spacer(1, 0.5 * inch))
 
@@ -2112,13 +2112,13 @@ def create_report_pdf_with_node_details(report_filename, scenario):
     elements.append(title)
     elements.append(Spacer(1, 0.5 * inch))
 
-    # Immagine della topologia
+    # Topology image
     elements.append(Paragraph(f"Topology ({scenario_map[scenario]}):", styles['Heading2']))
     img_path = f"{scenario}_topology.png"  # Assuming you have pre-saved topology images for each scenario
     elements.append(Image(img_path, width=6 * inch, height=6 * inch))
     elements.append(Spacer(1, 0.5 * inch))
 
-    # Aggiungi i dettagli della topologia nel report
+    # Add topology details in the report
     T, T_m, A = create_geotype(scenario_map[scenario])
     root_count, macro_count, small_count = get_topology_details(T)
 
@@ -2218,12 +2218,12 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
             elif solution == 'soluzione3_with_preagg':
                 soluzione_3_with_smallcellaggr_with_preaggregation(T, term)
 
-            # Calcola il consumo totale di switching e altri componenti
+            # Calculate the total consumption of switching and other components
             switching_consumption = sum(
                 T.nodes[node]['switching_consumption'] for node in T.nodes()) * 365 * 24 / 1000000
             other_consumption = sum(T.nodes[node]['other_consumption'] for node in T.nodes()) * 365 * 24 / 1000000
 
-            # Aggiungi i dati al dizionario per il consumo impilato
+            # Add data to the dictionary for stacked consumption
             data['Soluzione'].append(solution)
             data['Term'].append(term)
             data['Consumption'].append(switching_consumption)
@@ -2240,9 +2240,9 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
     # Creazione del grafico a barre con due colonne impilate per ogni soluzione (medium term e long term)
     plt.figure(figsize=(9, 7))
     ax = plt.gca()
-    # Definizione dei colori per ogni termine
-    colors_medium = ['#1f77b4', '#aec7e8']  # Azzurro per "Switching", azzurro chiaro per "Other"
-    colors_long = ['#ff7f0e', '#ffbb78']  # Arancione per "Switching", arancione chiaro per "Other"
+    # Definition of the colors for each term
+    colors_medium = ['#1f77b4', '#aec7e8']  # Blue for "Switching", light blue for "Other"
+    colors_long = ['#ff7f0e', '#ffbb78']  # Orange for "Switching", light orange for "Other"
     hatches_medium = ['/', '\\']  # Trame per "Medium Term"
     hatches_long = ['+', 'x']  # Trame per "Long Term"
 
@@ -2326,7 +2326,7 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
             elif solution == 'soluzione3_with_preagg':
                 soluzione_3_with_smallcellaggr_with_preaggregation(T, term)
 
-            # Calcola i costi di switching e trasmissione
+            # Calculate switching and transmission costs
             '''
             if ((solution == 'soluzione3' or solution == 'soluzione3_with_preagg') and scenario == 'Dense Urban'):
                 transceiver_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE"]) * 0.75
@@ -2353,13 +2353,13 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
             switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_EXTRA_LARGE",
                                                           "WDM_MUX", "MEDIA_CONVERTER", "TRANSPONDER"])
 
-            # Aggiungi i dati al dizionario per il costo di switching
+            # Add data to the dictionary for switching cost
             data['Soluzione'].append(solution)
             data['Term'].append(term)
             data['Cost'].append(switching_cost)
             data['Cost Type'].append('Switching')
 
-            # Aggiungi i dati al dizionario per il costo di trasmissione
+            # Add data to the dictionary for transmission cost
             data['Soluzione'].append(solution)
             data['Term'].append(term)
             data['Cost'].append(transceiver_cost)
@@ -2371,9 +2371,9 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
     # Creazione del grafico a barre con due colonne impilate per ogni soluzione (medium term e long term)
     plt.figure(figsize=(9, 7))
     ax = plt.gca()
-    # Definizione dei colori per ogni termine
-    # colors_medium = ['#1f77b4', '#aec7e8']  # Azzurro per "Switching", azzurro chiaro per "Transmission"
-    # colors_long = ['#ff7f0e', '#ffbb78']    # Arancione per "Switching", arancione chiaro per "Transmission"
+    # Definition of the colors for each term
+    # colors_medium = ['#1f77b4', '#aec7e8']  # Blue for "Switching", light blue for "Transmission"
+    # colors_long = ['#ff7f0e', '#ffbb78']    # Orange for "Switching", light orange for "Transmission"
 
     for term in ['Medium']:
         df_term = df[df['Term'] == term]
