@@ -148,7 +148,7 @@ class NetworkEquipmentType:
         self.size = size
         self.note = note
         self.capacity = capacity  # Adding capacity attribute
-        self.num_ports = num_ports  # Aggiunta del nuovo attributo num_ports
+        self.num_ports = num_ports  # Added the new num_ports attribute
 
 
 # Global definition of network equipment types
@@ -411,9 +411,9 @@ def allocate_capacity_macro(T, path, total_required_capacity):
         T.edges[u, v]['fibers'].append(Fiber())
         T.edges[u, v]['fibers'].append(Fiber())
 
-        fibers_to_use = T.edges[u, v]['fibers'][-2:]  # Usa le ultime due fibre aggiunte
+        fibers_to_use = T.edges[u, v]['fibers'][-2:]  # Use the last two added fibers
 
-        # Occupa una lunghezza d'onda su ciascuna fibra
+        # Occupy one wavelength on each fiber
         for fiber in fibers_to_use:
             for wavelength, current_capacity in fiber.wavelengths.items():
                 if current_capacity == 0:
@@ -436,9 +436,9 @@ def allocate_capacity_small(T, path, radio_equipment, term):
             T.edges[u, v]['fibers'].append(Fiber())
             T.edges[u, v]['fibers'].append(Fiber())
 
-            fibers_to_use = T.edges[u, v]['fibers'][-2:]  # Usa le ultime due fibre aggiunte
+            fibers_to_use = T.edges[u, v]['fibers'][-2:]  # Use the last two added fibers
 
-            # Occupa una lunghezza d'onda su ciascuna fibra
+            # Occupy one wavelength on each fiber
             for fiber in fibers_to_use:
                 for wavelength, current_capacity in fiber.wavelengths.items():
                     if current_capacity == 0:
@@ -450,7 +450,7 @@ def soluzione_1_with_smallcellswitch(T, term):
     initialize_node_equipment(T)
     root_node = 0
     '''
-    # Inizializzare il consumo energetico per ogni nodo a 0 per `switching_consumption` e `other_consumption`
+    # Initialize energy consumption for each node to 0 for `switching_consumption` and `other_consumption`
     for node in T.nodes:
         node['switching_consumption'] = 0
         node['other_consumption'] = 0
@@ -622,7 +622,7 @@ def allocate_capacity_wdm_on_path_macro(T, path, radio_equipment, term):
 
         if not T.has_edge(u, v):
             print(f"Edge ({u}, {v}) does not exist in the graph. Skipping allocation.")
-            continue  # Salta l'allocazione se l'edge non esiste
+            continue  # Skip allocation if the edge does not exist
 
         if 'fibers' not in T.edges[u, v]:
             T.edges[u, v]['fibers'] = []
@@ -656,7 +656,7 @@ def allocate_capacity_wdm_on_path_small(T, path, radio_equipment, term, with_mux
 
         if not T.has_edge(u, v):
             print(f"Edge ({u}, {v}) does not exist in the graph. Skipping allocation.")
-            continue  # Salta l'allocazione se l'edge non esiste
+            continue  # Skip allocation if the edge does not exist
 
         if 'fibers' not in T.edges[u, v]:
             T.edges[u, v]['fibers'] = []
@@ -665,7 +665,7 @@ def allocate_capacity_wdm_on_path_small(T, path, radio_equipment, term, with_mux
         T.edges[u, v]['fibers'].append(Fiber())
         T.edges[u, v]['fibers'].append(Fiber())
 
-        fibers_to_use = T.edges[u, v]['fibers'][-2:]  # Usa le ultime due fibre aggiunte
+        fibers_to_use = T.edges[u, v]['fibers'][-2:]  # Use the last two added fibers
 
         for fiber in fibers_to_use:
             allocated_wavelengths = 0
@@ -868,13 +868,13 @@ def allocate_capacity_xr_on_path_macro(T, path, total_capacity):
         if 'fibers' not in T.edges[u, v]:
             T.edges[u, v]['fibers'] = []
 
-        # Crea due nuove fibre per l'intero percorso
+        # Create two new fibers for the entire path
         T.edges[u, v]['fibers'].append(Fiber())
         T.edges[u, v]['fibers'].append(Fiber())
 
-        fibers_to_use = T.edges[u, v]['fibers'][-2:]  # Usa le ultime due fibre aggiunte
+        fibers_to_use = T.edges[u, v]['fibers'][-2:]  # Use the last two added fibers
 
-        # Occupa una lunghezza d'onda su ciascuna fibra
+        # Occupy one wavelength on each fiber
         for fiber in fibers_to_use:
             for wavelength, current_capacity in fiber.wavelengths.items():
                 if current_capacity == 0:
@@ -890,7 +890,7 @@ def calculate_switch_energy(switch_type, total_traffic_gbps):
     :param total_traffic_gbps: Total traffic handled by the switch in Gbps
     :return: Energy consumption in Watts
     """
-    # Modelli di consumo energetico in base al tipo di switch e traffico
+    # Energy consumption models based on switch type and traffic
     power_model = {
         "Small": [
             (0, 125), (20, 131), (40, 137), (60, 144), (80, 150), (100, 156), (120, 162), (140, 169), (160, 175),
@@ -917,12 +917,12 @@ def calculate_switch_energy(switch_type, total_traffic_gbps):
     if switch_type not in power_model:
         raise ValueError("Tipo di switch non valido. Scegli tra 'Small', 'Medium', 'Large', 'Extra Large'.")
 
-    # Trova il consumo energetico corrispondente al traffico totale
+    # Find the energy consumption corresponding to the total traffic
     model = power_model[switch_type]
     for i in range(len(model) - 1):
         (traffic_1, power_1), (traffic_2, power_2) = model[i], model[i + 1]
         if traffic_1 <= total_traffic_gbps <= traffic_2:
-            # Interpolazione lineare tra i due punti
+            # Linear interpolation between the two points
             return power_1 + (power_2 - power_1) * (total_traffic_gbps - traffic_1) / (traffic_2 - traffic_1)
 
     # If the total traffic exceeds the maximum value in the model, return the last consumption value
@@ -946,9 +946,9 @@ def allocate_capacity_xr_on_path_small(T, path, radio_equipment, term):
             T.edges[u, v]['fibers'].append(Fiber())
             T.edges[u, v]['fibers'].append(Fiber())
 
-            fibers_to_use = T.edges[u, v]['fibers'][-2:]  # Usa le ultime due fibre aggiunte
+            fibers_to_use = T.edges[u, v]['fibers'][-2:]  # Use the last two added fibers
 
-            # Occupa una lunghezza d'onda su ciascuna fibra
+            # Occupy one wavelength on each fiber
             for fiber in fibers_to_use:
                 for wavelength, current_capacity in fiber.wavelengths.items():
                     if current_capacity == 0:
@@ -1352,7 +1352,7 @@ def draw_graph_by_capacity_occupation(T):
             width = sum(
                 fiber.wavelengths[wavelength] for fiber in T.edges[u, v]['fibers'] for wavelength in fiber.wavelengths
                 if fiber.wavelengths[wavelength] > 0)
-            widths.append(width / 1000)  # Normalizza la larghezza per renderla visibile
+            widths.append(width / 1000)  # Normalize the width to make it visible
         else:
             widths.append(1)
 
@@ -1397,7 +1397,7 @@ def load_graph(filename):
     return T
 
 
-# Funzione per calcolare il costo totale del network equipment in un grafo
+# Function to calculate the total cost of network equipment in a graph
 def calculate_total_cost(T):
     transceiver_cost = calculate_cost_component(T,
                                                 ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "TRANSPONDER"])
@@ -1430,12 +1430,12 @@ def count_fibers(T):
 temporal_scenarios = ['Medium', 'Long']
 deployment_scenarios = ["Dense Urban", "Urban", "Suburban", "Rural"]
 
-# Lista per memorizzare i costi per tutte le soluzioni
+# List to store the costs for all solutions
 results_list = []
 
 
-# Funzione per eseguire i test per una determinata soluzione
-# Funzione per eseguire i test per una determinata soluzione con calcolo del costo normalizzato
+# Function to run tests for a specific solution
+# Function to run tests for a specific solution with normalized cost calculation
 def run_tests_for_solution(soluzione_fn, name, results_list):
     for term in temporal_scenarios:
         for scenario in deployment_scenarios:
@@ -1455,8 +1455,8 @@ def run_tests_for_solution(soluzione_fn, name, results_list):
 
 
 print("RUNNING TESTS")
-# Eseguire i test per tutte e sei le soluzioni
-results_list = []  # Assicurati che la lista sia vuota prima di eseguire i test
+# Run tests for all six solutions
+results_list = []  # Make sure the list is empty before running the tests
 run_tests_for_solution(soluzione_1_with_smallcellswitch, 'P2P with', results_list)
 print("RUNNED TEST SOL 1")
 # run_tests_for_solution(soluzione_1_wo_smallcellswitch, 'P2P wo', results_list)
@@ -1469,7 +1469,7 @@ print("RUNNED TEST SOL 3")
 run_tests_for_solution(soluzione_3_with_smallcellaggr_with_preaggregation, 'P2MP-WP with', results_list)
 print("RUNNED TEST SOL 3-WP")
 print("RUNNED TESTS")
-# Convertire la lista in un DataFrame
+# Convert the list into a DataFrame
 results_df = pd.DataFrame(results_list)
 
 # Update solution names for the "wo" and "with" versions with a clearer distinction
@@ -1489,13 +1489,13 @@ y_max_total = results_df['Total Cost'].max() * 1.1  # Add a 10% margin
 # Determine the maximum y-axis value for normalized cost
 y_max_normalized = results_df['Normalized Cost'].max() * 1.1  # Add a 10% margin
 '''
-# Creare grafici del costo totale per ogni scenario di deployment (versioni "wo")
+# Create total cost plots for each deployment scenario ("wo" versions)
 for scenario in deployment_scenarios:
     plt.figure(figsize=(14, 8))
     sns.barplot(data=results_df[(results_df['Deployment Scenario'] == scenario) &
                                 results_df['Soluzione'].str.contains('wo')],
                 x='Soluzione', y='Total Cost', hue='Temporal Scenario', errorbar=None, palette='pastel')
-    plt.ylim(0, y_max_total)  # Fissare il valore massimo dell'asse y
+    plt.ylim(0, y_max_total)  # Set the maximum y-axis value
     plt.xlabel('Solutions')
     plt.ylabel('Total Cost (Cost Units)')
     plt.title(f'Total Cost for {scenario} Scenario without Aggregation at the Small Cell')
@@ -1504,13 +1504,13 @@ for scenario in deployment_scenarios:
     plt.grid(True)
     plt.show(block=False)
 '''
-# Creare grafici del costo totale per ogni scenario di deployment (versioni "with")
+# Create total cost plots for each deployment scenario ("with" versions)
 for scenario in deployment_scenarios:
     plt.figure(figsize=(14, 8))
     sns.barplot(data=results_df[(results_df['Deployment Scenario'] == scenario) &
                                 results_df['Soluzione'].str.contains('with')],
                 x='Soluzione', y='Total Cost', hue='Temporal Scenario', errorbar=None, palette='pastel')
-    plt.ylim(0, y_max_total)  # Fissare il valore massimo dell'asse y
+    plt.ylim(0, y_max_total)  # Set the maximum y-axis value
     plt.xlabel('Solutions')
     plt.ylabel('Total Cost (Cost Units)')
     plt.title(f'Total Cost for {scenario} Scenario with Aggregation at the Small Cell')
@@ -1519,11 +1519,11 @@ for scenario in deployment_scenarios:
     plt.grid(True)
     plt.show(block=False)
 
-# Dati delle aree per i quattro scenari di deployment
+# Area data for the four deployment scenarios
 deployment_scenarios = ["Dense Urban", "Urban", "Suburban", "Rural"]
 areas = [0.8 * 0.8, 1.6 * 1.6, 3.2 * 3.2, 12.8 * 12.8]
 
-# Creazione del grafico delle aree
+# Create the area plot
 plt.figure(figsize=(10, 6))
 plt.bar(deployment_scenarios, areas, color='lightblue')
 plt.xlabel('Deployment Scenario')
@@ -1532,15 +1532,15 @@ plt.title('Area for Each Deployment Scenario')
 plt.grid(True)
 plt.show(block=False)
 '''
-# Creare grafici del costo normalizzato per ogni scenario di deployment con asse y logaritmico (versioni "wo")
+# Create normalized cost plots for each deployment scenario with logarithmic y-axis ("wo" versions)
 for scenario in deployment_scenarios:
     plt.figure(figsize=(14, 8))
     sns.barplot(data=results_df[(results_df['Deployment Scenario'] == scenario) &
                                 results_df['Soluzione'].str.contains('wo')],
                 x='Soluzione', y='Normalized Cost', hue='Temporal Scenario', errorbar=None, palette='pastel')
 
-    #plt.yscale('log')  # Imposta l'asse y su una scala logaritmica
-    plt.ylim(1, y_max_normalized)  # Fissare il valore massimo e minimo dell'asse y per evitare problemi con il log
+    #plt.yscale('log')  # Set the y-axis to a logarithmic scale
+    plt.ylim(1, y_max_normalized)  # Set the max and min y-axis values to avoid log issues
     plt.xlabel('Solutions')
     plt.ylabel('Normalized Cost (Cost Units per km²)')
     plt.title(f'Normalized Cost for {scenario} Scenario without Aggregation at the Small Cell')
@@ -1549,15 +1549,15 @@ for scenario in deployment_scenarios:
     plt.grid(True)
     plt.show(block=False)
 '''
-# Creare grafici del costo normalizzato per ogni scenario di deployment con asse y logaritmico (versioni "with")
+# Create normalized cost plots for each deployment scenario with logarithmic y-axis ("with" versions)
 for scenario in deployment_scenarios:
     plt.figure(figsize=(14, 8))
     sns.barplot(data=results_df[(results_df['Deployment Scenario'] == scenario) &
                                 results_df['Soluzione'].str.contains('with')],
                 x='Soluzione', y='Normalized Cost', hue='Temporal Scenario', errorbar=None, palette='pastel')
 
-    # plt.yscale('log')  # Imposta l'asse y su una scala logaritmica
-    plt.ylim(1, y_max_normalized)  # Fissare il valore massimo e minimo dell'asse y per evitare problemi con il log
+    # plt.yscale('log')  # Set the y-axis to a logarithmic scale
+    plt.ylim(1, y_max_normalized)  # Set the max and min y-axis values to avoid log issues
     plt.xlabel('Solutions')
     plt.ylabel('Normalized Cost (Cost Units per km²)')
     plt.title(f'Normalized Cost for {scenario} Scenario with Aggregation at the Small Cell')
@@ -1570,11 +1570,11 @@ for scenario in deployment_scenarios:
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# Lista per memorizzare i risultati della cost efficiency
+# List to store the cost efficiency results
 cost_efficiency_results = []
 
 
-# Funzione per calcolare la cost efficiency
+# Function to calculate cost efficiency
 def calculate_cost_efficiency(T, total_cost, term):
     total_required_capacity = sum([radio_eq.calculate_required_capacity(term) for node in T.nodes() for radio_eq in
                                    T.nodes[node]['radio_equipment']])  # DS and US
@@ -1583,17 +1583,17 @@ def calculate_cost_efficiency(T, total_cost, term):
     if total_required_capacity > 0:
         return total_cost / total_required_capacity
     else:
-        return float('inf')  # Evitare la divisione per zero
+        return float('inf')  # Avoid division by zero
 
 
-# Eseguire i test per le soluzioni "wo" e calcolare la cost efficiency
+# Run tests for the "wo" solutions and calculate the cost efficiency
 for term in temporal_scenarios:
     for scenario in deployment_scenarios:
-        # Carica il grafo
+        # Load the graph
         T, T_m, A = create_geotype(scenario)
         # Deploy radio equipment
         deploy_radio_equipment(T, term, scenario)
-        # Esegui le tre soluzioni "wo" e calcola la cost efficiency
+        # Execute the three "wo" solutions and calculate the cost efficiency
         for soluzione_fn, name in [(soluzione_1_with_smallcellswitch, 'P2P'),
                                    (soluzione_2_with_smallcellmux, 'WDM'),
                                    (soluzione_3_with_smallcellaggr, 'P2MP'),
@@ -1613,18 +1613,18 @@ for term in temporal_scenarios:
                 'Cost Efficiency': cost_efficiency
             })
 
-# Convertire la lista in un DataFrame
+# Convert the list into a DataFrame
 cost_efficiency_df = pd.DataFrame(cost_efficiency_results)
 
 # Determine the maximum y-axis value to set the scale
 y_max_efficiency = cost_efficiency_df['Cost Efficiency'].max() * 1.1  # Add a 10% margin
 '''
-# Creare grafici della cost efficiency per ogni scenario di deployment
+# Create cost efficiency plots for each deployment scenario
 for scenario in deployment_scenarios:
     plt.figure(figsize=(14, 8))
     sns.barplot(data=cost_efficiency_df[(cost_efficiency_df['Deployment Scenario'] == scenario)],
                 x='Soluzione', y='Cost Efficiency', hue='Temporal Scenario', errorbar=None, palette='pastel')
-    plt.ylim(0, y_max_efficiency)  # Fissare il valore massimo dell'asse y
+    plt.ylim(0, y_max_efficiency)  # Set the maximum y-axis value
     plt.xlabel('Solutions')
     plt.ylabel('Cost Efficiency (Cost Units per FH Capacity Unit)')
     plt.title(f'Cost Efficiency for {scenario} Scenario with Small Cell Aggregation')
@@ -1669,13 +1669,13 @@ def calculate_network_efficiency(T, term):
     if total_deployed_capacity > 0:
         return total_required_capacity / total_deployed_capacity
     else:
-        return float('inf')  # Evitare la divisione per zero
+        return float('inf')  # Avoid division by zero
 
 
-# Lista per memorizzare i risultati di network efficiency
+# List to store network efficiency results
 network_efficiency_results = []
 
-# Eseguire i test per la network efficiency per ogni soluzione "with"
+# Run network efficiency tests for each "with" solution
 for soluzione_fn, name in [
     (soluzione_1_with_smallcellswitch, 'P2P'),
     (soluzione_2_with_smallcellmux, 'WDM'),
@@ -1684,7 +1684,7 @@ for soluzione_fn, name in [
 ]:
     for term in temporal_scenarios:
         for scenario in deployment_scenarios:
-            # Carica il grafo
+            # Load the graph
             T, T_m, A = create_geotype(scenario)
             # Deploy radio equipment
             deploy_radio_equipment(T, term, scenario)
@@ -1700,10 +1700,10 @@ for soluzione_fn, name in [
                 'Network Efficiency': network_efficiency
             })
 
-# Convertire la lista in un DataFrame
+# Convert the list into a DataFrame
 network_efficiency_df = pd.DataFrame(network_efficiency_results)
 
-# Creare grafici della network efficiency per ogni scenario di deployment
+# Create network efficiency plots for each deployment scenario
 for scenario in deployment_scenarios:
     plt.figure(figsize=(14, 8))
     sns.barplot(data=network_efficiency_df[
@@ -1734,20 +1734,20 @@ def calculate_fiber_utilization(T, term):
     if total_fibers > 0:
         return total_required_capacity / total_fibers
     else:
-        return float('inf')  # Evitare la divisione per zero
+        return float('inf')  # Avoid division by zero
 
 
-# Lista per memorizzare i risultati di fiber utilization
+# List to store the results of fiber utilization
 results_fiber_utilization = []
 
-# Calcolo della fiber utilization per ogni combinazione di scenario e soluzione
+# Calculate fiber utilization for every combination of scenario and solution
 for name, soluzione_fn in [('P2P', soluzione_1_with_smallcellswitch),
                            ('WDM', soluzione_2_with_smallcellmux),
                            ('P2MP', soluzione_3_with_smallcellaggr),
                            ('P2MP-WP', soluzione_3_with_smallcellaggr_with_preaggregation)]:
     for term in temporal_scenarios:
         for scenario in deployment_scenarios:
-            # Carica il grafo
+            # Load the graph
             T, T_m, A = create_geotype(scenario)
             # Deploy radio equipment
             deploy_radio_equipment(T, term, scenario)
@@ -1763,17 +1763,17 @@ for name, soluzione_fn in [('P2P', soluzione_1_with_smallcellswitch),
                 'Fiber Utilization': fiber_utilization
             })
 
-# Convertire i risultati in un DataFrame
+# Convert the results into a DataFrame
 results_fiber_df = pd.DataFrame(results_fiber_utilization)
 '''
-# Creare grafici della fiber utilization per ogni scenario di deployment
+# Create fiber utilization plots for each deployment scenario
 for scenario in deployment_scenarios:
     plt.figure(figsize=(14, 8))
     sns.barplot(data=results_fiber_df[
         (results_fiber_df['Deployment Scenario'] == scenario)],
                 x='Soluzione', y='Fiber Utilization', hue='Temporal Scenario', errorbar=None, palette='pastel')
 
-    plt.ylim(0, results_fiber_df['Fiber Utilization'].max() * 1.1)  # Fissare il valore massimo dell'asse y
+    plt.ylim(0, results_fiber_df['Fiber Utilization'].max() * 1.1)  # Set the maximum y-axis value
     plt.xlabel('Solutions')
     plt.ylabel('Fiber Utilization (Gbps per Fiber)')
     plt.title(f'Fiber Utilization for {scenario} Scenario (with Aggregation at the Small Cell)')
@@ -1795,7 +1795,7 @@ import pandas as pd
 
 
 def plot_topology():
-    img_path = "dense_urban_topology.png"  # Percorso dell'immagine salvata
+    img_path = "dense_urban_topology.png"  # Path of the saved image
     return img_path
 
 
@@ -1830,7 +1830,7 @@ def generate_stacked_cost_plot(T, term, scenario, output_path):
 
     df = pd.DataFrame(cost_data)
 
-    # Plot impilato
+    # Stacked plot
     df.set_index('Solution')[['Transceivers Cost', 'Switching Cost']].plot(kind='bar', stacked=True)
     plt.title(f"Cost Breakdown for {term.capitalize()} Term - {scenario}")
     plt.ylabel('Cost (Cost Units)')
@@ -1873,18 +1873,18 @@ from collections import Counter
 def get_printed_equipment_info(T, node, term):
     network_equipments = T.nodes[node]['network_equipment']
 
-    # Contare il numero di ogni tipo di equipment
+    # Count the number of each equipment type
     equipment_counter = Counter(eq.equipment_type.name for eq in network_equipments)
 
-    # Creare l'output raggruppato
+    # Create the grouped output
     f = io.StringIO()
     with redirect_stdout(f):
         print(f"Node {node} Network Equipment (Count by Type):")
         for eq_type, count in equipment_counter.items():
             print(f"{eq_type}: {count} unit(s)")
-        print()  # Aggiunge una linea vuota per separare le sezioni
+        print()  # Adds an empty line to separate sections
 
-        # Stampare i dettagli dei singoli equipment
+        # Print details for individual equipment
         for eq_type in equipment_counter.keys():
             eq_sample = next(eq for eq in network_equipments if eq.equipment_type.name == eq_type)
             if 'TRANSCEIVERS' in eq_sample.equipment_type.name or 'XR_MODULE' in eq_sample.equipment_type.name:
@@ -1897,7 +1897,7 @@ def get_printed_equipment_info(T, node, term):
                 print(f"- Capacity: {network_equipment_types[eq_sample.equipment_type].capacity} Gbps")
             print()
 
-        # Informazioni sugli equipment radio
+        # Information on radio equipment
         radio_equipments = T.nodes[node]['radio_equipment']
         radio_equipment_counter = Counter(eq.equipment_type.value for eq in radio_equipments)
 
@@ -1949,12 +1949,12 @@ def get_node_details(T, node_id):
     node_type_str = "Macro" if node_type == 1 else "Small" if node_type == 2 else "Root"
     network_equipments = node.get('network_equipment', [])
 
-    # Dizionario per contare il numero di equipaggiamenti per tipo
+    # Dictionary to count the number of equipments by type
     equipment_count = {}
 
     for eq in network_equipments:
         equipment_type = eq.equipment_type
-        # Usa data_rate per i transceivers, XR_MODULE e MEDIA_CONVERTER, altrimenti capacity
+        # Use data_rate for transceivers, XR_MODULE and MEDIA_CONVERTER, otherwise capacity
         if "TRANSCEIVERS" in equipment_type.name or "XR_MODULE" in equipment_type.name or "MEDIA_CONVERTER" in equipment_type.name:
             capacity_or_datarate = eq.data_rate
         else:
@@ -1966,7 +1966,7 @@ def get_node_details(T, node_id):
                                                'quantity': 0}
         equipment_count[equipment_type]['quantity'] += 1
 
-    # Trasforma il dictionary in una lista di dettagli
+    # Convert the dictionary into a list of details
     network_details = []
     for equipment_type, details in equipment_count.items():
         network_details.append({
@@ -2098,7 +2098,7 @@ def create_report_pdf_with_node_details(report_filename, scenario):
     doc = SimpleDocTemplate(report_filename, pagesize=letter)
     elements = []
 
-    # Mappatura per tradurre i nomi dei file in nomi degli scenari
+    # Mapping to translate file names into scenario names
     scenario_map = {
         'dense_urban': 'Dense Urban',
         'urban': 'Urban',
@@ -2106,7 +2106,7 @@ def create_report_pdf_with_node_details(report_filename, scenario):
         'rural': 'Rural'
     }
 
-    # Titolo
+    # Title
     styles = getSampleStyleSheet()
     title = Paragraph(f"Report per scenario {scenario_map[scenario]}", styles['Title'])
     elements.append(title)
@@ -2128,7 +2128,7 @@ def create_report_pdf_with_node_details(report_filename, scenario):
     elements.append(Paragraph(f"Small Nodes: {small_count}", styles['Normal']))
     elements.append(Spacer(1, 0.5 * inch))
 
-    # Definisci le soluzioni in base al parametro "version"
+    # Define the solutions based on the "version" parameter
     '''
     if version == 'wo':
         solution_names = [("P2P", soluzione_1_wo_smallcellswitch), ("WDM", soluzione_2_wo_smallcellmux), ("P2MP", soluzione_3_wo_smallcellaggr)]
@@ -2141,29 +2141,29 @@ def create_report_pdf_with_node_details(report_filename, scenario):
 
     terms = ['Medium', 'Long']
 
-    # Generazione del grafico dei costi per il medium term
+    # Generate the cost plot for the medium term
     deploy_radio_equipment(T, 'Medium', scenario_map[scenario])
-    # solution_names[0][1](T,'Medium')  # Esegui la prima soluzione
+    # solution_names[0][1](T,'Medium')  # Execute the first solution
 
     elements.append(Paragraph("Cost Breakdown (Medium Term):", styles['Heading2']))
     generate_stacked_cost_plot(T, 'Medium', scenario_map[scenario], 'short_term_cost_breakdown.png')
     elements.append(Image('short_term_cost_breakdown.png', width=6 * inch, height=4 * inch))
     elements.append(Spacer(1, 0.5 * inch))
 
-    # Generazione del grafico dei costi per il long term
+    # Generate the cost plot for the long term
     T, T_m, A = create_geotype(scenario_map[scenario])
     deploy_radio_equipment(T, 'Long', scenario_map[scenario])
-    # solution_names[0][1](T,'Long')  # Esegui la prima soluzione
+    # solution_names[0][1](T,'Long')  # Execute the first solution
 
     elements.append(Paragraph("Cost Breakdown (Long Term):", styles['Heading2']))
     generate_stacked_cost_plot(T, 'Long', scenario_map[scenario], 'long_term_cost_breakdown.png')
     elements.append(Image('long_term_cost_breakdown.png', width=6 * inch, height=4 * inch))
     elements.append(Spacer(1, 0.5 * inch))
 
-    # Trova i nodi da dettagliare
+    # Find the nodes to detail
     root_node, macro_node, small_node = find_first_node_of_each_type(T)
 
-    # Eseguiamo le soluzioni per lo scenario specificato
+    # Execute the solutions for the specified scenario
     for name, solution_fn in solution_names:
         for term in terms:
             elements.append(Paragraph(f"{name} - {term} Term", styles['Heading2']))
@@ -2175,7 +2175,7 @@ def create_report_pdf_with_node_details(report_filename, scenario):
     doc.build(elements)
 
 
-# Creazione di report per tutti gli scenari e versioni
+# Create reports for all scenarios and versions
 scenarios = ['dense_urban', 'urban', 'suburban', 'rural']
 
 for scenario in scenarios:
@@ -2187,11 +2187,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib as mpl
 
-plt.rc('font', size=30)  # Imposta la dimensione del font di default a 14
+plt.rc('font', size=30)  # Set the default font size to 14
 
-# Ciclo per gli scenari di deployment per creare bar plot
+# Loop through deployment scenarios to create bar plots
 for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
-    # Creazione di un dizionario per memorizzare i dati di ciascuna soluzione
+    # Create a dictionary to store the data for each solution
     data = {
         'Soluzione': [],
         'Term': [],
@@ -2199,16 +2199,16 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
         'Consumption Type': []
     }
 
-    # Per ogni termine (medio termine, lungo termine)
+    # For each term (medium term, long term)
     for term in ['Medium', 'Long']:
-        # Lista delle soluzioni da rappresentare
+        # List of solutions to represent
         solutions = ['soluzione1_with', 'soluzione2_with', 'soluzione3', 'soluzione3_with_preagg']
 
-        # Per ogni soluzione
+        # For each solution
         for solution in solutions:
             T, T_m, A = create_geotype(scenario)
             deploy_radio_equipment(T, term, scenario)
-            # Esegui la funzione della soluzione
+            # Execute the solution function
             if solution == 'soluzione1_with':
                 soluzione_1_with_smallcellswitch(T, term)
             elif solution == 'soluzione2_with':
@@ -2234,17 +2234,17 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
             data['Consumption'].append(other_consumption)
             data['Consumption Type'].append('Other')
 
-    # Creazione del DataFrame dai dati
+    # Create the DataFrame from the data
     df = pd.DataFrame(data)
 
-    # Creazione del grafico a barre con due colonne impilate per ogni soluzione (medium term e long term)
+    # Create a bar chart with two stacked columns for each solution (medium term and long term)
     plt.figure(figsize=(9, 7))
     ax = plt.gca()
     # Definition of the colors for each term
     colors_medium = ['#1f77b4', '#aec7e8']  # Blue for "Switching", light blue for "Other"
     colors_long = ['#ff7f0e', '#ffbb78']  # Orange for "Switching", light orange for "Other"
-    hatches_medium = ['/', '\\']  # Trame per "Medium Term"
-    hatches_long = ['+', 'x']  # Trame per "Long Term"
+    hatches_medium = ['/', '\\']  # Patterns for "Medium Term"
+    hatches_long = ['+', 'x']  # Patterns for "Long Term"
 
     for term in ['Medium']:
         df_term = df[df['Term'] == term]
@@ -2269,7 +2269,7 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
             patch.set_hatch(next(patterns))
     L = ax.legend()
 
-    # Personalizzazione della legenda
+    # Legend customization
     handles, labels = ax.get_legend_handles_labels()
     custom_labels = ['Transmission (MT)', 'Switching (MT)', 'Transmission (LT)', 'Switching (LT)']
     if scenario == 'Rural':
@@ -2277,7 +2277,7 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
     else:
         plt.legend().set_visible(False)
     plt.legend().set_visible(False)
-    # plt.rc('font', size=24)  # Imposta la dimensione del font di default a 14
+    # plt.rc('font', size=24)  # Set the default font size to 14
 
     # plt.title(f'Energy Consumption for {scenario.capitalize()} Scenario')
     plt.ylabel('E (MWh)')
@@ -2297,9 +2297,9 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
 
 # COST ANALYSIS
 
-# Ciclo per gli scenari di deployment per creare bar plot
+# Loop through deployment scenarios to create bar plots
 for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
-    # Creazione di un dizionario per memorizzare i dati di ciascuna soluzione
+    # Create a dictionary to store the data for each solution
     data = {
         'Soluzione': [],
         'Term': [],
@@ -2307,16 +2307,16 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
         'Cost Type': []
     }
 
-    # Per ogni termine (medio termine, lungo termine)
+    # For each term (medium term, long term)
     for term in ['Medium', 'Long']:
-        # Lista delle soluzioni da rappresentare
+        # List of solutions to represent
         solutions = ['soluzione1_with', 'soluzione2_with', 'soluzione3', 'soluzione3_with_preagg']
 
-        # Per ogni soluzione
+        # For each solution
         for solution in solutions:
             T, T_m, A = create_geotype(scenario)
             deploy_radio_equipment(T, term, scenario)
-            # Esegui la funzione della soluzione
+            # Execute the solution function
             if solution == 'soluzione1_with':
                 soluzione_1_with_smallcellswitch(T, term)
             elif solution == 'soluzione2_with':
@@ -2365,10 +2365,10 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
             data['Cost'].append(transceiver_cost)
             data['Cost Type'].append('Transmission')
 
-    # Creazione del DataFrame dai dati
+    # Create the DataFrame from the data
     df = pd.DataFrame(data)
 
-    # Creazione del grafico a barre con due colonne impilate per ogni soluzione (medium term e long term)
+    # Create a bar chart with two stacked columns for each solution (medium term and long term)
     plt.figure(figsize=(9, 7))
     ax = plt.gca()
     # Definition of the colors for each term
