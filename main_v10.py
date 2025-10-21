@@ -2615,5 +2615,248 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
     plt.savefig(f'cost_analysis_tris_{scenario}.pdf', format='pdf', dpi=300, bbox_inches='tight')
     plt.show()
 
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
+
+# Funzione per aggiornare i costi XR basati su alfa
+def update_xr_costs(network_equipment_types, NetworkEquipmentTypeEnum, alpha):
+    """
+    Aggiorna i costi degli elementi XR moltiplicando il costo dei corrispondenti
+    elementi GREY per il fattore alpha
+    """
+    # Mapping tra capacità XR e corrispondenti GREY transceivers
+    xr_to_grey_mapping = {
+        NetworkEquipmentTypeEnum.XR_MODULE_25G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_25G_LR,
+        NetworkEquipmentTypeEnum.XR_MODULE_50G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_50G_LR,
+        NetworkEquipmentTypeEnum.XR_MODULE_100G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,
+        NetworkEquipmentTypeEnum.XR_MODULE_200G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,  # 2x100G
+        NetworkEquipmentTypeEnum.XR_MODULE_400G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_400G_LR,
+        NetworkEquipmentTypeEnum.XR_MODULE_HUB_100G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,
+        NetworkEquipmentTypeEnum.XR_MODULE_HUB_200G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,  # 2x100G
+        NetworkEquipmentTypeEnum.XR_MODULE_HUB_400G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_400G_LR,
+    }
+
+    # Aggiorna i costi XR
+    for xr_enum, grey_enum in xr_to_grey_mapping.items():
+        grey_cost = network_equipment_types[grey_enum].normalized_price
+
+        # Per moduli 200G, moltiplica per 2 poiché equivalgono a 2x100G
+        if "200G" in xr_enum.name:
+            network_equipment_types[xr_enum].normalized_price = 2 * grey_cost * alpha
+        else:
+            network_equipment_types[xr_enum].normalized_price = grey_cost * alpha
+
+    # Aggiorna anche i media converter costs basandosi sul loro data rate equivalente
+    media_converter_grey_mapping = {
+        NetworkEquipmentTypeEnum.MEDIA_CONVERTER_100G_4X25G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,
+        NetworkEquipmentTypeEnum.MEDIA_CONVERTER_200G_8X25G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,
+        # 2x100G
+        NetworkEquipmentTypeEnum.MEDIA_CONVERTER_400G_400G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_400G_LR,
+    }
+
+    for mc_enum, grey_enum in media_converter_grey_mapping.items():
+        grey_cost = network_equipment_types[grey_enum].normalized_price
+        if "200G" in mc_enum.name:
+            network_equipment_types[
+                mc_enum].normalized_price = 2 * grey_cost * alpha * 0.5  # 0.5 factor for media converters
+        else:
+            network_equipment_types[mc_enum].normalized_price = grey_cost * alpha * 0.5
+
+
+def run_cost_analysis_with_alpha(alpha_values, temporal_scenarios, deployment_scenarios):
+    """
+    Esegue l'analisi del costo totale per tutte le soluzioni al variare di alpha
+    """
+    results = []
+
+    for alpha in alpha_values:
+        print(f"Analizzando alpha = {alpha}")
+
+        for term in temporal_scenarios:
+            for scenario in deployment_scenarios:
+                # Lista delle soluzioni da testare
+                solutions = [
+                    ('P2P', soluzione_1_with_smallcellswitch),
+                    ('WDM', soluzione_2_with_smallcellmux),
+                    ('WDM-WP', soluzione_2_with_smallcellaggr_with_preaggregation),
+                    ('P2MP', soluzione_3_with_smallcellaggr),
+                    ('P2MP-WP', soluzione_3_with_smallcellaggr_with_preaggregation)
+                ]
+
+                for sol_name, sol_func in solutions:
+                    # Crea nuovo grafo per ogni test
+                    T, T_m, A = create_geotype(scenario)
+                    deploy_radio_equipment(T, term, scenario)
+
+                    # Aggiorna i costi XR con il valore corrente di alpha
+                    update_xr_costs(network_equipment_types, NetworkEquipmentTypeEnum, alpha)
+
+                    # Applica la soluzione
+                    sol_func(T, term)
+
+                    # Calcola il costo totale
+                    total_cost = calculate_total_cost(T)
+
+                    results.append({
+                        'Alpha': alpha,
+                        'Solution': sol_name,
+                        'Term': term,
+                        'Scenario': scenario,
+                        'Total Cost': total_cost,
+                        'Normalized Cost': total_cost / A
+                    })
+
+    return pd.DataFrame(results)
+
+
+def plot_cost_vs_alpha(df_results, scenario, term):
+    """
+    Crea un grafico del costo totale vs alpha per un dato scenario e termine
+    """
+    plt.figure(figsize=(10, 8))
+
+    # Filtra i dati per lo scenario e il termine specificati
+    df_filtered = df_results[(df_results['Scenario'] == scenario) & (df_results['Term'] == term)]
+
+    # Crea il grafico per ogni soluzione
+    for solution in ['P2P', 'WDM', 'WDM-WP', 'P2MP', 'P2MP-WP']:
+        df_sol = df_filtered[df_filtered['Solution'] == solution]
+        plt.plot(df_sol['Alpha'], df_sol['Total Cost'], marker='o', label=solution, linewidth=2, markersize=8)
+
+    plt.xlabel('Alpha (XR cost factor)', fontsize=14)
+    plt.ylabel('Total Cost (Cost Units)', fontsize=14)
+    plt.title(f'Total Cost vs Alpha - {scenario} ({term} Term)', fontsize=16)
+    plt.legend(fontsize=12)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    # Salva il grafico
+    filename = f'cost_vs_alpha_{scenario.lower().replace(" ", "_")}_{term.lower()}.pdf'
+    plt.savefig(filename, format='pdf', dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+def plot_cost_vs_alpha_all_scenarios(df_results, term):
+    """
+    Crea una griglia di grafici per tutti gli scenari di deployment
+    """
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+    axes = axes.flatten()
+
+    scenarios = ['Dense Urban', 'Urban', 'Suburban', 'Rural']
+
+    for idx, scenario in enumerate(scenarios):
+        ax = axes[idx]
+        df_filtered = df_results[(df_results['Scenario'] == scenario) & (df_results['Term'] == term)]
+
+        for solution in ['P2P', 'WDM', 'WDM-WP', 'P2MP', 'P2MP-WP']:
+            df_sol = df_filtered[df_filtered['Solution'] == solution]
+            ax.plot(df_sol['Alpha'], df_sol['Total Cost'], marker='o', label=solution, linewidth=2, markersize=6)
+
+        ax.set_xlabel('Alpha (XR cost factor)', fontsize=12)
+        ax.set_ylabel('Total Cost (Cost Units)', fontsize=12)
+        ax.set_title(f'{scenario}', fontsize=14)
+        ax.grid(True, alpha=0.3)
+
+        if idx == 0:
+            ax.legend(fontsize=10)
+
+    fig.suptitle(f'Total Cost vs Alpha - All Scenarios ({term} Term)', fontsize=16)
+    plt.tight_layout()
+
+    # Salva il grafico
+    filename = f'cost_vs_alpha_all_scenarios_{term.lower()}.pdf'
+    plt.savefig(filename, format='pdf', dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+def plot_relative_cost_savings(df_results, reference_solution='P2P'):
+    """
+    Plotta il risparmio percentuale rispetto a una soluzione di riferimento
+    """
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+    axes = axes.flatten()
+
+    scenarios = ['Dense Urban', 'Urban', 'Suburban', 'Rural']
+
+    for idx, scenario in enumerate(scenarios):
+        ax = axes[idx]
+
+        for term in ['Medium', 'Long']:
+            df_filtered = df_results[(df_results['Scenario'] == scenario) & (df_results['Term'] == term)]
+
+            # Calcola il costo della soluzione di riferimento per ogni alpha
+            df_ref = df_filtered[df_filtered['Solution'] == reference_solution]
+
+            for solution in ['WDM', 'WDM-WP', 'P2MP', 'P2MP-WP']:
+                if solution == reference_solution:
+                    continue
+
+                df_sol = df_filtered[df_filtered['Solution'] == solution]
+
+                # Calcola il risparmio percentuale
+                savings = []
+                alpha_vals = []
+
+                for alpha in df_sol['Alpha'].unique():
+                    ref_cost = df_ref[df_ref['Alpha'] == alpha]['Total Cost'].values[0]
+                    sol_cost = df_sol[df_sol['Alpha'] == alpha]['Total Cost'].values[0]
+                    saving_pct = ((ref_cost - sol_cost) / ref_cost) * 100
+                    savings.append(saving_pct)
+                    alpha_vals.append(alpha)
+
+                linestyle = '-' if term == 'Medium' else '--'
+                ax.plot(alpha_vals, savings, marker='o', label=f'{solution} ({term})',
+                        linewidth=2, markersize=6, linestyle=linestyle)
+
+        ax.set_xlabel('Alpha (XR cost factor)', fontsize=12)
+        ax.set_ylabel(f'Cost Savings vs {reference_solution} (%)', fontsize=12)
+        ax.set_title(f'{scenario}', fontsize=14)
+        ax.grid(True, alpha=0.3)
+        ax.axhline(y=0, color='k', linestyle='-', alpha=0.5)
+
+        if idx == 0:
+            ax.legend(fontsize=9)
+
+    fig.suptitle(f'Relative Cost Savings vs {reference_solution} Solution', fontsize=16)
+    plt.tight_layout()
+
+    # Salva il grafico
+    plt.savefig('relative_cost_savings_vs_alpha.pdf', format='pdf', dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+
+# Definisci i valori di alpha da testare
+alpha_values = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0]
+
+# Scenari temporali e di deployment
+temporal_scenarios = ['Medium', 'Long']
+deployment_scenarios = ['Dense Urban', 'Urban', 'Suburban', 'Rural']
+
+print("Avvio analisi costo XR parametrico...")
+
+# Esegui l'analisi
+df_results = run_cost_analysis_with_alpha(alpha_values, temporal_scenarios, deployment_scenarios)
+
+# Salva i risultati in CSV
+df_results.to_csv('xr_cost_analysis_results.csv', index=False)
+print("Risultati salvati in 'xr_cost_analysis_results.csv'")
+
+# Crea i grafici per ogni scenario e termine
+for scenario in deployment_scenarios:
+    for term in temporal_scenarios:
+        plot_cost_vs_alpha(df_results, scenario, term)
+
+# Crea grafici combinati
+for term in temporal_scenarios:
+    plot_cost_vs_alpha_all_scenarios(df_results, term)
+
+# Crea grafici del risparmio relativo
+plot_relative_cost_savings(df_results)
+
+print("Analisi completata!")
 

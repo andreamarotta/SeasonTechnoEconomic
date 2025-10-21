@@ -201,13 +201,13 @@ network_equipment_types = {
                                                                 3.5),
     NetworkEquipmentTypeEnum.SPLITTER_1_4: NetworkEquipmentType("Splitter/combiner 1:4", None, "1:4", 100.0, 0.02, 0,
                                                                 7.0),
-    NetworkEquipmentTypeEnum.SWITCH_SMALL: NetworkEquipmentType("small (2x200G)", None, "", 3000.0, 0.60, 100, "", None,
+    NetworkEquipmentTypeEnum.SWITCH_SMALL: NetworkEquipmentType("small (2x200G)", None, "", 3000.0, 0.60*4, 100, "", None,
                                                                 "small", 250, 400),
-    NetworkEquipmentTypeEnum.SWITCH_MEDIUM: NetworkEquipmentType("medium (2x800G)", None, "", 8000.0, 1.60, 300, "",
+    NetworkEquipmentTypeEnum.SWITCH_MEDIUM: NetworkEquipmentType("medium (2x800G)", None, "", 8000.0, 1.60*4, 300, "",
                                                                  None, "medium", 350, 1600),
-    NetworkEquipmentTypeEnum.SWITCH_BIG: NetworkEquipmentType("Large (2x1.6T)", None, "", 14000.0, 2.80, 460, "", None,
+    NetworkEquipmentTypeEnum.SWITCH_BIG: NetworkEquipmentType("Large (2x1.6T)", None, "", 14000.0, 2.80*4, 460, "", None,
                                                               "large", 460, 3200),
-    NetworkEquipmentTypeEnum.SWITCH_EXTRA_LARGE: NetworkEquipmentType("Extra Large (2x3.2T)", None, "", 14001.0, 2.80,
+    NetworkEquipmentTypeEnum.SWITCH_EXTRA_LARGE: NetworkEquipmentType("Extra Large (2x3.2T)", None, "", 14001.0, 4.0*4.0,
                                                                       620, "", None, "extra_large", 620, 6400),
     NetworkEquipmentTypeEnum.XR_MODULE_25G: NetworkEquipmentType("XR 25 G module", 100,
                                                                  "coherent DSCM ≈ 200 km reach", 1000.0, 0.10, 3.5,
@@ -245,6 +245,34 @@ network_equipment_types = {
                                                                None, 4.33, num_ports=5)  # Added the number of ports
 }
 
+# ============================================
+# SALVATAGGIO E RIPRISTINO COSTI ORIGINALI
+# ============================================
+
+# Salva TUTTI i costi originali all'inizio del programma
+ORIGINAL_ALL_COSTS = {}
+
+def save_all_original_costs():
+    """Salva tutti i costi originali di network equipment"""
+    global ORIGINAL_ALL_COSTS
+    for eq_enum in NetworkEquipmentTypeEnum:
+        ORIGINAL_ALL_COSTS[eq_enum] = {
+            'price': network_equipment_types[eq_enum].price,
+            'normalized_price': network_equipment_types[eq_enum].normalized_price,
+            'max_power': network_equipment_types[eq_enum].max_power
+        }
+
+def reset_all_costs_to_original():
+    """Ripristina tutti i costi ai valori originali"""
+    for eq_enum, original_values in ORIGINAL_ALL_COSTS.items():
+        network_equipment_types[eq_enum].price = original_values['price']
+        network_equipment_types[eq_enum].normalized_price = original_values['normalized_price']
+        network_equipment_types[eq_enum].max_power = original_values['max_power']
+
+
+# CHIAMA QUESTA FUNZIONE SUBITO DOPO LE DEFINIZIONI DI network_equipment_types
+# Mettila subito dopo la riga: network_equipment_types = { ... }
+save_all_original_costs()
 
 # Updated NetworkEquipment class
 class NetworkEquipment:
@@ -1599,9 +1627,8 @@ def load_graph(filename):
 # Function to calculate the total cost of network equipment in a graph
 def calculate_total_cost(T):
     transceiver_cost = calculate_cost_component(T,
-                                                ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "TRANSPONDER"])
-    switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_EXTRA_LARGE", "WDM_MUX",
-                                                  "MEDIA_CONVERTER"])
+                                                ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "TRANSPONDER", "MEDIA_CONVERTER"])
+    switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" ,  "SWITCH_EXTRA_LARGE", "WDM_MUX"])
     total_cost = transceiver_cost + switching_cost
     return total_cost
     '''
@@ -2008,9 +2035,8 @@ def generate_stacked_cost_plot(T, term, scenario, output_path):
         elif solution == 'P2MP-WP':
             soluzione_3_with_smallcellaggr_with_preaggregation(T, term)
 
-        transceiver_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE"])
-        switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_EXTRA_LARGE", "WDM_MUX",
-                                                      "MEDIA_CONVERTER", "TRANSPONDER"])
+        transceiver_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "MEDIA_CONVERTER", "TRANSPONDER"])
+        switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE", "WDM_MUX"])
         total_cost = transceiver_cost + switching_cost
 
         cost_data.append({
@@ -2525,29 +2551,29 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
             # Calculate switching and transmission costs
             '''
             if ((solution == 'soluzione3' or solution == 'soluzione3_with_preagg') and scenario == 'Dense Urban'):
-                transceiver_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE"]) * 0.75
-                switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_EXTRA_LARGE", "WDM_MUX", "MEDIA_CONVERTER", "TRANSPONDER"]) * 0.75
+                transceiver_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "MEDIA_CONVERTER", "TRANSPONDER"]) * 0.75
+                switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE", "WDM_MUX", "MEDIA_CONVERTER", "TRANSPONDER"]) * 0.75
             elif ((solution == 'soluzione3' or solution == 'soluzione3_with_preagg') and scenario == 'Urban'):
                 transceiver_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS",
                                                                 "XR_MODULE"]) * 0.80
-                switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_EXTRA_LARGE",
+                switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE",
                                                               "WDM_MUX", "MEDIA_CONVERTER", "TRANSPONDER"]) * 0.80
             elif ((solution == 'soluzione3' or solution == 'soluzione3_with_preagg') and scenario == 'Suburban'):
                 transceiver_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS",
                                                                 "XR_MODULE"]) * 0.55
-                switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_EXTRA_LARGE",
+                switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE",
                                                               "WDM_MUX", "MEDIA_CONVERTER", "TRANSPONDER"]) * 0.55
             elif ((solution == 'soluzione3' or solution == 'soluzione3_with_preagg') and scenario == 'Rural'):
                 transceiver_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS",
                                                                 "XR_MODULE"]) * 0.85
-                switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_EXTRA_LARGE",
+                switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE",
                                                               "WDM_MUX", "MEDIA_CONVERTER", "TRANSPONDER"]) * 0.85
             else:
             '''
             transceiver_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS",
-                                                            "XR_MODULE"])
-            switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_EXTRA_LARGE",
-                                                          "WDM_MUX", "MEDIA_CONVERTER", "TRANSPONDER"])
+                                                            "XR_MODULE", "MEDIA_CONVERTER", "TRANSPONDER"])
+            switching_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE",
+                                                          "WDM_MUX"])
 
             # Add data to the dictionary for switching cost
             data['Soluzione'].append(solution)
@@ -2609,11 +2635,1027 @@ for scenario in ['Dense Urban', 'Urban', 'Suburban', 'Rural']:
     # plt.xticks(rotation=0, ticks=[0, 1, 2, 3])
     plt.xticks(rotation=0, ticks=[0, 1, 2, 3,4], labels=['P2P', 'WDM', 'WDM-WP', 'P2MP', 'P2MP-WP'])
     plt.xlim([-0.5, 4.5])
-    plt.ylim([0, 300])
+    plt.ylim([0, 350])
     plt.grid(axis='y')
     plt.tight_layout()
     plt.savefig(f'cost_analysis_tris_{scenario}.pdf', format='pdf', dpi=300, bbox_inches='tight')
     plt.show()
 
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+
+def plot_cost_vs_alpha(df_results, scenario, term):
+    """
+    Crea un grafico del costo totale vs alpha per un dato scenario e termine
+    """
+    plt.figure(figsize=(10, 8))
+
+    # Filtra i dati per lo scenario e il termine specificati
+    df_filtered = df_results[(df_results['Scenario'] == scenario) & (df_results['Term'] == term)]
+
+    # Crea il grafico per ogni soluzione
+    for solution in ['P2P', 'WDM', 'WDM-WP', 'P2MP', 'P2MP-WP']:
+        df_sol = df_filtered[df_filtered['Solution'] == solution]
+        plt.plot(df_sol['Alpha'], df_sol['Total Cost'], marker='o', label=solution, linewidth=2, markersize=8)
+
+    plt.xlabel('Alpha (XR cost factor)', fontsize=14)
+    plt.ylabel('Total Cost (Cost Units)', fontsize=14)
+    plt.title(f'Total Cost vs Alpha - {scenario} ({term} Term)', fontsize=16)
+    plt.legend(fontsize=12)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    # Salva il grafico
+    filename = f'cost_vs_alpha_{scenario.lower().replace(" ", "_")}_{term.lower()}.pdf'
+    plt.savefig(filename, format='pdf', dpi=300, bbox_inches='tight')
+    plt.show()
 
 
+def plot_cost_vs_alpha_all_scenarios(df_results, term):
+    """
+    Crea una griglia di grafici per tutti gli scenari di deployment
+    """
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+    axes = axes.flatten()
+
+    scenarios = ['Dense Urban', 'Urban', 'Suburban', 'Rural']
+
+    for idx, scenario in enumerate(scenarios):
+        ax = axes[idx]
+        df_filtered = df_results[(df_results['Scenario'] == scenario) & (df_results['Term'] == term)]
+
+        for solution in ['P2P', 'WDM', 'WDM-WP', 'P2MP', 'P2MP-WP']:
+            df_sol = df_filtered[df_filtered['Solution'] == solution]
+            ax.plot(df_sol['Alpha'], df_sol['Total Cost'], marker='o', label=solution, linewidth=2, markersize=6)
+
+        ax.set_xlabel('Alpha (XR cost factor)', fontsize=12)
+        ax.set_ylabel('Total Cost (Cost Units)', fontsize=12)
+        ax.set_title(f'{scenario}', fontsize=14)
+        ax.grid(True, alpha=0.3)
+
+        if idx == 0:
+            ax.legend(fontsize=10)
+
+    fig.suptitle(f'Total Cost vs Alpha - All Scenarios ({term} Term)', fontsize=16)
+    plt.tight_layout()
+
+    # Salva il grafico
+    filename = f'cost_vs_alpha_all_scenarios_{term.lower()}.pdf'
+    plt.savefig(filename, format='pdf', dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+def plot_relative_cost_savings(df_results, reference_solution='P2P'):
+    """
+    Plotta il risparmio percentuale rispetto a una soluzione di riferimento
+    """
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+    axes = axes.flatten()
+
+    scenarios = ['Dense Urban', 'Urban', 'Suburban', 'Rural']
+
+    for idx, scenario in enumerate(scenarios):
+        ax = axes[idx]
+
+        for term in ['Medium', 'Long']:
+            df_filtered = df_results[(df_results['Scenario'] == scenario) & (df_results['Term'] == term)]
+
+            # Calcola il costo della soluzione di riferimento per ogni alpha
+            df_ref = df_filtered[df_filtered['Solution'] == reference_solution]
+
+            for solution in ['WDM', 'WDM-WP', 'P2MP', 'P2MP-WP']:
+                if solution == reference_solution:
+                    continue
+
+                df_sol = df_filtered[df_filtered['Solution'] == solution]
+
+                # Calcola il risparmio percentuale
+                savings = []
+                alpha_vals = []
+
+                for alpha in df_sol['Alpha'].unique():
+                    ref_cost = df_ref[df_ref['Alpha'] == alpha]['Total Cost'].values[0]
+                    sol_cost = df_sol[df_sol['Alpha'] == alpha]['Total Cost'].values[0]
+                    saving_pct = ((ref_cost - sol_cost) / ref_cost) * 100
+                    savings.append(saving_pct)
+                    alpha_vals.append(alpha)
+
+                linestyle = '-' if term == 'Medium' else '--'
+                ax.plot(alpha_vals, savings, marker='o', label=f'{solution} ({term})',
+                        linewidth=2, markersize=6, linestyle=linestyle)
+
+        ax.set_xlabel('Alpha (XR cost factor)', fontsize=12)
+        ax.set_ylabel(f'Cost Savings vs {reference_solution} (%)', fontsize=12)
+        ax.set_title(f'{scenario}', fontsize=14)
+        ax.grid(True, alpha=0.3)
+        ax.axhline(y=0, color='k', linestyle='-', alpha=0.5)
+
+        if idx == 0:
+            ax.legend(fontsize=9)
+
+    fig.suptitle(f'Relative Cost Savings vs {reference_solution} Solution', fontsize=16)
+    plt.tight_layout()
+
+    # Salva il grafico
+    plt.savefig('relative_cost_savings_vs_alpha.pdf', format='pdf', dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+# ============================================
+# CORRECTED ALFA ANALYSIS FOR XR EQUIPMENT
+# Costi XR = Costi GREY LR × Alpha
+# ============================================
+
+def update_xr_costs_based_on_grey_lr(network_equipment_types, NetworkEquipmentTypeEnum, alpha):
+    """
+    Aggiorna i costi XR basandosi sui costi dei GREY LR transceivers moltiplicati per alpha
+    """
+    # Mapping tra XR modules e corrispondenti GREY LR transceivers
+    xr_to_grey_mapping = {
+        NetworkEquipmentTypeEnum.XR_MODULE_25G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_25G_LR,
+        NetworkEquipmentTypeEnum.XR_MODULE_50G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_50G_LR,
+        NetworkEquipmentTypeEnum.XR_MODULE_100G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,
+        NetworkEquipmentTypeEnum.XR_MODULE_200G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,  # 2x100G
+        NetworkEquipmentTypeEnum.XR_MODULE_400G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_400G_LR,
+        NetworkEquipmentTypeEnum.XR_MODULE_HUB_100G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,
+        NetworkEquipmentTypeEnum.XR_MODULE_HUB_200G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,  # 2x100G
+        NetworkEquipmentTypeEnum.XR_MODULE_HUB_400G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_400G_LR,
+    }
+
+    # Aggiorna i costi XR modules
+    for xr_enum, grey_enum in xr_to_grey_mapping.items():
+        grey_normalized_cost = network_equipment_types[grey_enum].normalized_price
+
+        # Per moduli 200G, usa 2x il costo del 100G
+        if "200G" in xr_enum.name:
+            network_equipment_types[xr_enum].normalized_price = 2 * grey_normalized_cost * alpha
+        else:
+            network_equipment_types[xr_enum].normalized_price = grey_normalized_cost * alpha
+
+    # Aggiorna i media converter costs (50% del costo XR corrispondente)
+    media_converter_mapping = {
+        NetworkEquipmentTypeEnum.MEDIA_CONVERTER_100G_4X25G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,
+        NetworkEquipmentTypeEnum.MEDIA_CONVERTER_200G_8X25G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_100G_LR,
+        # 2x100G
+        NetworkEquipmentTypeEnum.MEDIA_CONVERTER_400G_400G: NetworkEquipmentTypeEnum.GREY_TRANSCEIVERS_400G_LR,
+    }
+
+    for mc_enum, grey_enum in media_converter_mapping.items():
+        grey_normalized_cost = network_equipment_types[grey_enum].normalized_price
+
+        if "200G" in mc_enum.name:
+            network_equipment_types[mc_enum].normalized_price = 2 * grey_normalized_cost * alpha * 0.5
+        else:
+            network_equipment_types[mc_enum].normalized_price = grey_normalized_cost * alpha * 0.5
+
+
+def run_cost_analysis_with_alpha_corrected(alpha_values, temporal_scenarios, deployment_scenarios):
+    """
+    Esegue l'analisi del costo totale per tutte le soluzioni al variare di alpha
+    XR cost = GREY LR cost × alpha
+    """
+    results = []
+
+    for alpha in alpha_values:
+        print(f"Analizzando alpha = {alpha}")
+
+        # RIPRISTINA I COSTI ORIGINALI PRIMA DI AGGIORNARE CON IL NUOVO ALPHA
+        reset_all_costs_to_original()
+
+        # POI AGGIORNA I COSTI XR CON QUESTO SPECIFICO VALORE DI ALPHA
+        update_xr_costs_based_on_grey_lr(network_equipment_types, NetworkEquipmentTypeEnum, alpha)
+
+        for term in temporal_scenarios:
+            for scenario in deployment_scenarios:
+                # Lista delle soluzioni da testare
+                solutions = [
+                    ('P2P', soluzione_1_with_smallcellswitch),
+                    ('WDM', soluzione_2_with_smallcellmux),
+                    ('WDM-WP', soluzione_2_with_smallcellaggr_with_preaggregation),
+                    ('P2MP', soluzione_3_with_smallcellaggr),
+                    ('P2MP-WP', soluzione_3_with_smallcellaggr_with_preaggregation)
+                ]
+
+                for sol_name, sol_func in solutions:
+                    # Crea nuovo grafo per ogni test
+                    T, T_m, A = create_geotype(scenario)
+                    deploy_radio_equipment(T, term, scenario)
+
+                    # NON aggiornare qui - i costi sono già stati impostati una volta per questo alpha!
+
+                    # Applica la soluzione
+                    sol_func(T, term)
+
+                    # Calcola il costo totale
+                    total_cost = calculate_total_cost(T)
+
+                    results.append({
+                        'Alpha': alpha,
+                        'Solution': sol_name,
+                        'Term': term,
+                        'Scenario': scenario,
+                        'Total Cost': total_cost,
+                        'Normalized Cost': total_cost / A
+                    })
+
+    return pd.DataFrame(results)
+
+# Definisci i valori di alpha da testare
+alpha_values = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0]
+
+# Scenari temporali e di deployment
+temporal_scenarios = ['Medium', 'Long']
+deployment_scenarios = ['Dense Urban', 'Urban', 'Suburban', 'Rural']
+
+print("Avvio analisi costo XR parametrico CORRETTA...")
+print("XR cost = GREY LR cost × alpha")
+
+# Esegui l'analisi corretta
+df_results_corrected = run_cost_analysis_with_alpha_corrected(alpha_values, temporal_scenarios, deployment_scenarios)
+
+# Salva i risultati in CSV
+df_results_corrected.to_csv('xr_cost_analysis_results_corrected.csv', index=False)
+print("Risultati corretti salvati in 'xr_cost_analysis_results_corrected.csv'")
+
+# Crea i grafici per ogni scenario e termine
+for scenario in deployment_scenarios:
+    for term in temporal_scenarios:
+        plot_cost_vs_alpha(df_results_corrected, scenario, term)
+
+# Crea grafici combinati
+for term in temporal_scenarios:
+    plot_cost_vs_alpha_all_scenarios(df_results_corrected, term)
+
+# Crea grafici del risparmio relativo
+plot_relative_cost_savings(df_results_corrected)
+
+print("Analisi corretta completata!")
+
+
+# ============================================
+# BEST/WORST CASE ANALYSIS FOR XR EQUIPMENT
+# ============================================
+
+# ============================================
+# BEST/WORST CASE ANALYSIS FOR XR EQUIPMENT
+# ============================================
+
+# RIPRISTINA I COSTI ORIGINALI PRIMA DI INIZIARE
+reset_all_costs_to_original()
+
+# Definizione dei costi e consumi per XR modules - Best e Worst case
+XR_COSTS = {
+    'best': {
+        'XR_100G': 1.0,  # CU
+        'XR_200G': 1.2,  # CU
+        'XR_400G': 1.4  # CU
+    },
+    'worst': {
+        'XR_100G': 1.5,  # CU
+        'XR_200G': 1.8,  # CU
+        'XR_400G': 2.1  # CU
+    }
+}
+
+XR_POWER = {
+    'best': {
+        'XR_100G': 5.5,  # W
+        'XR_200G': 13.5,  # W
+        'XR_400G': 22.0  # W
+    },
+    'worst': {
+        'XR_100G': 7.2,  # W
+        'XR_200G': 18.0,  # W
+        'XR_400G': 29.0  # W
+    }
+}
+
+
+def update_xr_equipment_scenario(network_equipment_types, NetworkEquipmentTypeEnum, case='best'):
+    """
+    Aggiorna costi e consumi energetici per XR equipment basandosi su best/worst case
+    """
+    if case not in ['best', 'worst']:
+        raise ValueError("Case deve essere 'best' o 'worst'")
+
+    # Update XR modules da 25G a 100G
+    if '25G' in NetworkEquipmentTypeEnum.XR_MODULE_25G.name:
+        network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_25G].normalized_price = XR_COSTS[case][
+                                                                                               'XR_100G'] * 0.25
+        network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_25G].max_power = XR_POWER[case]['XR_100G'] * 0.25
+
+    if '50G' in NetworkEquipmentTypeEnum.XR_MODULE_50G.name:
+        network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_50G].normalized_price = XR_COSTS[case][
+                                                                                               'XR_100G'] * 0.5
+        network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_50G].max_power = XR_POWER[case]['XR_100G'] * 0.5
+
+    # XR 100G modules
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_100G].normalized_price = XR_COSTS[case]['XR_100G']
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_100G].max_power = XR_POWER[case]['XR_100G']
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_HUB_100G].normalized_price = XR_COSTS[case]['XR_100G']
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_HUB_100G].max_power = XR_POWER[case]['XR_100G']
+
+    # XR 200G modules
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_200G].normalized_price = XR_COSTS[case]['XR_200G']
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_200G].max_power = XR_POWER[case]['XR_200G']
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_HUB_200G].normalized_price = XR_COSTS[case]['XR_200G']
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_HUB_200G].max_power = XR_POWER[case]['XR_200G']
+
+    # XR 400G modules
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_400G].normalized_price = XR_COSTS[case]['XR_400G']
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_400G].max_power = XR_POWER[case]['XR_400G']
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_HUB_400G].normalized_price = XR_COSTS[case]['XR_400G']
+    network_equipment_types[NetworkEquipmentTypeEnum.XR_MODULE_HUB_400G].max_power = XR_POWER[case]['XR_400G']
+
+    # Media converters - 50% del costo XR, 30% del consumo
+    network_equipment_types[NetworkEquipmentTypeEnum.MEDIA_CONVERTER_100G_4X25G].normalized_price = XR_COSTS[case][
+                                                                                                        'XR_100G'] * 0.5
+    network_equipment_types[NetworkEquipmentTypeEnum.MEDIA_CONVERTER_100G_4X25G].max_power = XR_POWER[case][
+                                                                                                 'XR_100G'] * 0.3
+
+    network_equipment_types[NetworkEquipmentTypeEnum.MEDIA_CONVERTER_200G_8X25G].normalized_price = XR_COSTS[case][
+                                                                                                        'XR_200G'] * 0.5
+    network_equipment_types[NetworkEquipmentTypeEnum.MEDIA_CONVERTER_200G_8X25G].max_power = XR_POWER[case][
+                                                                                                 'XR_200G'] * 0.3
+
+    network_equipment_types[NetworkEquipmentTypeEnum.MEDIA_CONVERTER_400G_400G].normalized_price = XR_COSTS[case][
+                                                                                                       'XR_400G'] * 0.5
+    network_equipment_types[NetworkEquipmentTypeEnum.MEDIA_CONVERTER_400G_400G].max_power = XR_POWER[case][
+                                                                                                'XR_400G'] * 0.3
+
+
+def calculate_total_energy_consumption(T):
+    """Calcola consumo energetico totale annuale in MWh"""
+    switching_consumption = sum(T.nodes[node]['switching_consumption'] for node in T.nodes())
+    other_consumption = sum(T.nodes[node]['other_consumption'] for node in T.nodes())
+    total_annual_mwh = (switching_consumption + other_consumption) * 365 * 24 / 1000000
+    return total_annual_mwh
+
+
+def calculate_energy_component(T, component_type):
+    """Calcola consumo energetico per componente specifico in MWh"""
+    consumption = sum(T.nodes[node][component_type] for node in T.nodes())
+    annual_mwh = consumption * 365 * 24 / 1000000
+    return annual_mwh
+
+
+# Esegui l'analisi best/worst case
+print("\n=== BEST/WORST CASE ANALYSIS ===")
+results_best_worst = []
+
+temporal_scenarios = ['Medium', 'Long']
+deployment_scenarios = ['Dense Urban', 'Urban', 'Suburban', 'Rural']
+
+for term in temporal_scenarios:
+    for scenario in deployment_scenarios:
+        print(f"Analyzing {scenario} - {term} term...")
+
+        # P2P (non usa XR)
+        T, T_m, A = create_geotype(scenario)
+        deploy_radio_equipment(T, term, scenario)
+        soluzione_1_with_smallcellswitch(T, term)
+
+        p2p_cost = calculate_total_cost(T)
+        p2p_tx_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "MEDIA_CONVERTER", "TRANSPONDER"])
+        p2p_mux_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE","WDM_MUX"])
+        p2p_energy = calculate_total_energy_consumption(T)
+        p2p_tx_energy = calculate_energy_component(T, 'other_consumption')
+        p2p_sw_energy = calculate_energy_component(T, 'switching_consumption')
+
+        results_best_worst.append({
+            'Solution': 'P2P', 'Case': 'N/A', 'Term': term, 'Scenario': scenario,
+            'Total Cost': p2p_cost, 'TX Cost': p2p_tx_cost, 'MUX Cost': p2p_mux_cost,
+            'Total Energy': p2p_energy, 'TX Energy': p2p_tx_energy, 'SW Energy': p2p_sw_energy
+        })
+
+        # WDM (non usa XR)
+        T, T_m, A = create_geotype(scenario)
+        deploy_radio_equipment(T, term, scenario)
+        soluzione_2_with_smallcellmux(T, term)
+
+        wdm_cost = calculate_total_cost(T)
+        wdm_tx_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "MEDIA_CONVERTER", "TRANSPONDER"])
+        wdm_mux_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE", "WDM_MUX"])
+        wdm_energy = calculate_total_energy_consumption(T)
+        wdm_tx_energy = calculate_energy_component(T, 'other_consumption')
+        wdm_sw_energy = calculate_energy_component(T, 'switching_consumption')
+
+        results_best_worst.append({
+            'Solution': 'WDM', 'Case': 'N/A', 'Term': term, 'Scenario': scenario,
+            'Total Cost': wdm_cost, 'TX Cost': wdm_tx_cost, 'MUX Cost': wdm_mux_cost,
+            'Total Energy': wdm_energy, 'TX Energy': wdm_tx_energy, 'SW Energy': wdm_sw_energy
+        })
+
+        # WDM-WP (non usa XR)
+        T, T_m, A = create_geotype(scenario)
+        deploy_radio_equipment(T, term, scenario)
+        soluzione_2_with_smallcellaggr_with_preaggregation(T, term)
+
+        wdm_wp_cost = calculate_total_cost(T)
+        wdm_wp_tx_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "MEDIA_CONVERTER", "TRANSPONDER"])
+        wdm_wp_mux_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE","WDM_MUX"])
+        wdm_wp_energy = calculate_total_energy_consumption(T)
+        wdm_wp_tx_energy = calculate_energy_component(T, 'other_consumption')
+        wdm_wp_sw_energy = calculate_energy_component(T, 'switching_consumption')
+
+        results_best_worst.append({
+            'Solution': 'WDM-WP', 'Case': 'N/A', 'Term': term, 'Scenario': scenario,
+            'Total Cost': wdm_wp_cost, 'TX Cost': wdm_wp_tx_cost, 'MUX Cost': wdm_wp_mux_cost,
+            'Total Energy': wdm_wp_energy, 'TX Energy': wdm_wp_tx_energy, 'SW Energy': wdm_wp_sw_energy
+        })
+
+        # P2MP Best Case
+        T, T_m, A = create_geotype(scenario)
+        deploy_radio_equipment(T, term, scenario)
+        update_xr_equipment_scenario(network_equipment_types, NetworkEquipmentTypeEnum, 'best')
+        soluzione_3_with_smallcellaggr(T, term)
+
+        p2mp_best_cost = calculate_total_cost(T)
+        p2mp_best_tx_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "MEDIA_CONVERTER", "TRANSPONDER"])
+        p2mp_best_mux_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE", "WDM_MUX"])
+        p2mp_best_energy = calculate_total_energy_consumption(T)
+        p2mp_best_tx_energy = calculate_energy_component(T, 'other_consumption')
+        p2mp_best_sw_energy = calculate_energy_component(T, 'switching_consumption')
+
+        results_best_worst.append({
+            'Solution': 'P2MP', 'Case': 'Best', 'Term': term, 'Scenario': scenario,
+            'Total Cost': p2mp_best_cost, 'TX Cost': p2mp_best_tx_cost, 'MUX Cost': p2mp_best_mux_cost,
+            'Total Energy': p2mp_best_energy, 'TX Energy': p2mp_best_tx_energy, 'SW Energy': p2mp_best_sw_energy
+        })
+
+        # P2MP Worst Case
+        T, T_m, A = create_geotype(scenario)
+        deploy_radio_equipment(T, term, scenario)
+        update_xr_equipment_scenario(network_equipment_types, NetworkEquipmentTypeEnum, 'worst')
+        soluzione_3_with_smallcellaggr(T, term)
+
+        p2mp_worst_cost = calculate_total_cost(T)
+        p2mp_worst_tx_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "MEDIA_CONVERTER", "TRANSPONDER"])
+        p2mp_worst_mux_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE", "WDM_MUX"])
+        p2mp_worst_energy = calculate_total_energy_consumption(T)
+        p2mp_worst_tx_energy = calculate_energy_component(T, 'other_consumption')
+        p2mp_worst_sw_energy = calculate_energy_component(T, 'switching_consumption')
+
+        results_best_worst.append({
+            'Solution': 'P2MP', 'Case': 'Worst', 'Term': term, 'Scenario': scenario,
+            'Total Cost': p2mp_worst_cost, 'TX Cost': p2mp_worst_tx_cost, 'MUX Cost': p2mp_worst_mux_cost,
+            'Total Energy': p2mp_worst_energy, 'TX Energy': p2mp_worst_tx_energy, 'SW Energy': p2mp_worst_sw_energy
+        })
+
+        # P2MP-WP Best Case
+        T, T_m, A = create_geotype(scenario)
+        deploy_radio_equipment(T, term, scenario)
+        update_xr_equipment_scenario(network_equipment_types, NetworkEquipmentTypeEnum, 'best')
+        soluzione_3_with_smallcellaggr_with_preaggregation(T, term)
+
+        p2mp_wp_best_cost = calculate_total_cost(T)
+        p2mp_wp_best_tx_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "MEDIA_CONVERTER", "TRANSPONDER"])
+        p2mp_wp_best_mux_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE", "WDM_MUX"])
+        p2mp_wp_best_energy = calculate_total_energy_consumption(T)
+        p2mp_wp_best_tx_energy = calculate_energy_component(T, 'other_consumption')
+        p2mp_wp_best_sw_energy = calculate_energy_component(T, 'switching_consumption')
+
+        results_best_worst.append({
+            'Solution': 'P2MP-WP', 'Case': 'Best', 'Term': term, 'Scenario': scenario,
+            'Total Cost': p2mp_wp_best_cost, 'TX Cost': p2mp_wp_best_tx_cost, 'MUX Cost': p2mp_wp_best_mux_cost,
+            'Total Energy': p2mp_wp_best_energy, 'TX Energy': p2mp_wp_best_tx_energy,
+            'SW Energy': p2mp_wp_best_sw_energy
+        })
+
+        # P2MP-WP Worst Case
+        T, T_m, A = create_geotype(scenario)
+        deploy_radio_equipment(T, term, scenario)
+        update_xr_equipment_scenario(network_equipment_types, NetworkEquipmentTypeEnum, 'worst')
+        soluzione_3_with_smallcellaggr_with_preaggregation(T, term)
+
+        p2mp_wp_worst_cost = calculate_total_cost(T)
+        p2mp_wp_worst_tx_cost = calculate_cost_component(T, ["GREY_TRANSCEIVERS", "WDM_TRANSCEIVERS", "XR_MODULE", "MEDIA_CONVERTER", "TRANSPONDER"])
+        p2mp_wp_worst_mux_cost = calculate_cost_component(T, ["SWITCH_SMALL", "SWITCH_MEDIUM", "SWITCH_BIG" , "SWITCH_EXTRA_LARGE", "WDM_MUX"])
+        p2mp_wp_worst_energy = calculate_total_energy_consumption(T)
+        p2mp_wp_worst_tx_energy = calculate_energy_component(T, 'other_consumption')
+        p2mp_wp_worst_sw_energy = calculate_energy_component(T, 'switching_consumption')
+
+        results_best_worst.append({
+            'Solution': 'P2MP-WP', 'Case': 'Worst', 'Term': term, 'Scenario': scenario,
+            'Total Cost': p2mp_wp_worst_cost, 'TX Cost': p2mp_wp_worst_tx_cost, 'MUX Cost': p2mp_wp_worst_mux_cost,
+            'Total Energy': p2mp_wp_worst_energy, 'TX Energy': p2mp_wp_worst_tx_energy,
+            'SW Energy': p2mp_wp_worst_sw_energy
+        })
+
+# Converti in DataFrame
+df_best_worst = pd.DataFrame(results_best_worst)
+df_best_worst.to_csv('best_worst_case_analysis.csv', index=False)
+print("Results saved to 'best_worst_case_analysis.csv'")
+
+# GRAFICI PRIMA COMPARISON (P2P, WDM, P2MP best, P2MP worst)
+print("\nCreating first comparison plots...")
+
+import matplotlib as mpl
+
+plt.rc('font', size=30)
+
+for scenario in deployment_scenarios:
+    # Cost comparison plot
+    plt.figure(figsize=(12, 8))
+
+    # Filtra dati
+    df_scenario = df_best_worst[
+        (df_best_worst['Scenario'] == scenario) &
+        df_best_worst['Solution'].isin(['P2P', 'WDM', 'P2MP'])
+        ]
+
+    # Prepara dati per il plot
+    x_labels = ['P2P', 'WDM', 'P2MP\n(Best)', 'P2MP\n(Worst)']
+    x_pos = np.arange(len(x_labels))
+    width = 0.35
+
+    # Medium Term
+    mt_tx = []
+    mt_mux = []
+    # Long Term
+    lt_tx = []
+    lt_mux = []
+
+    for sol in ['P2P', 'WDM']:
+        df_sol_mt = df_scenario[(df_scenario['Solution'] == sol) & (df_scenario['Term'] == 'Medium')]
+        df_sol_lt = df_scenario[(df_scenario['Solution'] == sol) & (df_scenario['Term'] == 'Long')]
+
+        mt_tx.append(df_sol_mt['TX Cost'].values[0] if len(df_sol_mt) > 0 else 0)
+        mt_mux.append(df_sol_mt['MUX Cost'].values[0] if len(df_sol_mt) > 0 else 0)
+        lt_tx.append(df_sol_lt['TX Cost'].values[0] if len(df_sol_lt) > 0 else 0)
+        lt_mux.append(df_sol_lt['MUX Cost'].values[0] if len(df_sol_lt) > 0 else 0)
+
+    # P2MP Best e Worst
+    for case in ['Best', 'Worst']:
+        df_p2mp_mt = df_scenario[(df_scenario['Solution'] == 'P2MP') &
+                                 (df_scenario['Case'] == case) &
+                                 (df_scenario['Term'] == 'Medium')]
+        df_p2mp_lt = df_scenario[(df_scenario['Solution'] == 'P2MP') &
+                                 (df_scenario['Case'] == case) &
+                                 (df_scenario['Term'] == 'Long')]
+
+        mt_tx.append(df_p2mp_mt['TX Cost'].values[0] if len(df_p2mp_mt) > 0 else 0)
+        mt_mux.append(df_p2mp_mt['MUX Cost'].values[0] if len(df_p2mp_mt) > 0 else 0)
+        lt_tx.append(df_p2mp_lt['TX Cost'].values[0] if len(df_p2mp_lt) > 0 else 0)
+        lt_mux.append(df_p2mp_lt['MUX Cost'].values[0] if len(df_p2mp_lt) > 0 else 0)
+
+    # Plot
+    colors_medium = ['#1f77b4', '#aec7e8']
+    colors_long = ['#ff7f0e', '#ffbb78']
+
+    # Medium term bars
+    plt.bar(x_pos - width / 2, mt_tx, width, label='Transmission (MT)', color=colors_medium[0], edgecolor='black')
+    plt.bar(x_pos - width / 2, mt_mux, width, bottom=mt_tx, label='Switching (MT)',
+            color=colors_medium[1], edgecolor='black', hatch='//')
+
+    # Long term bars
+    plt.bar(x_pos + width / 2, lt_tx, width, label='Transmission (LT)', color=colors_long[0], edgecolor='black')
+    plt.bar(x_pos + width / 2, lt_mux, width, bottom=lt_tx, label='Switching (LT)',
+            color=colors_long[1], edgecolor='black', hatch='\\\\')
+
+    plt.ylabel('CAPEX (Cost Units)')
+    plt.xlabel('')
+    plt.xticks(x_pos, x_labels)
+    plt.xlim([-0.5, 3.5])
+    plt.ylim([0, 350])
+    if scenario == 'Rural':
+        plt.legend()
+    else:
+        plt.legend().set_visible(False)
+    plt.grid(axis='y', alpha=0.3)
+    plt.tight_layout()
+
+    plt.savefig(f'cost_comparison_v1_{scenario.lower().replace(" ", "_")}.pdf',
+                format='pdf', dpi=300, bbox_inches='tight')
+    plt.show()
+
+    # GRAFICI ENERGIA - PRIMA COMPARISON (P2P, WDM, P2MP best, P2MP worst)
+    print("\nCreating energy comparison plots (First set)...")
+
+    for scenario in deployment_scenarios:
+        plt.figure(figsize=(12, 8))
+
+        # Filtra dati
+        df_scenario = df_best_worst[
+            (df_best_worst['Scenario'] == scenario) &
+            df_best_worst['Solution'].isin(['P2P', 'WDM', 'P2MP'])
+            ]
+
+        # Prepara dati per il plot
+        x_labels = ['P2P', 'WDM', 'P2MP\n(Best)', 'P2MP\n(Worst)']
+        x_pos = np.arange(len(x_labels))
+        width = 0.35
+
+        # Medium Term
+        mt_tx_energy = []
+        mt_sw_energy = []
+        # Long Term
+        lt_tx_energy = []
+        lt_sw_energy = []
+
+        for sol in ['P2P', 'WDM']:
+            df_sol_mt = df_scenario[(df_scenario['Solution'] == sol) & (df_scenario['Term'] == 'Medium')]
+            df_sol_lt = df_scenario[(df_scenario['Solution'] == sol) & (df_scenario['Term'] == 'Long')]
+
+            mt_tx_energy.append(df_sol_mt['TX Energy'].values[0] if len(df_sol_mt) > 0 else 0)
+            mt_sw_energy.append(df_sol_mt['SW Energy'].values[0] if len(df_sol_mt) > 0 else 0)
+            lt_tx_energy.append(df_sol_lt['TX Energy'].values[0] if len(df_sol_lt) > 0 else 0)
+            lt_sw_energy.append(df_sol_lt['SW Energy'].values[0] if len(df_sol_lt) > 0 else 0)
+
+        # P2MP Best e Worst
+        for case in ['Best', 'Worst']:
+            df_p2mp_mt = df_scenario[(df_scenario['Solution'] == 'P2MP') &
+                                     (df_scenario['Case'] == case) &
+                                     (df_scenario['Term'] == 'Medium')]
+            df_p2mp_lt = df_scenario[(df_scenario['Solution'] == 'P2MP') &
+                                     (df_scenario['Case'] == case) &
+                                     (df_scenario['Term'] == 'Long')]
+
+            mt_tx_energy.append(df_p2mp_mt['TX Energy'].values[0] if len(df_p2mp_mt) > 0 else 0)
+            mt_sw_energy.append(df_p2mp_mt['SW Energy'].values[0] if len(df_p2mp_mt) > 0 else 0)
+            lt_tx_energy.append(df_p2mp_lt['TX Energy'].values[0] if len(df_p2mp_lt) > 0 else 0)
+            lt_sw_energy.append(df_p2mp_lt['SW Energy'].values[0] if len(df_p2mp_lt) > 0 else 0)
+
+        # Plot
+        colors_medium = ['#1f77b4', '#aec7e8']
+        colors_long = ['#ff7f0e', '#ffbb78']
+
+        # Medium term bars
+        plt.bar(x_pos - width / 2, mt_tx_energy, width, label='Transmission (MT)', color=colors_medium[0], edgecolor='black')
+        plt.bar(x_pos - width / 2, mt_sw_energy, width, bottom=mt_tx_energy, label='Switching (MT)',
+                color=colors_medium[1], edgecolor='black', hatch='//')
+
+        # Long term bars
+        plt.bar(x_pos + width / 2, lt_tx_energy, width, label='Transmission (LT)', color=colors_long[0], edgecolor='black')
+        plt.bar(x_pos + width / 2, lt_sw_energy, width, bottom=lt_tx_energy, label='Switching (LT)',
+                color=colors_long[1], edgecolor='black', hatch='\\\\')
+
+        plt.ylabel('Energy (MWh/year)')
+        plt.xlabel('')
+        plt.xticks(x_pos, x_labels)
+        plt.xlim([-0.5, 3.5])
+        plt.ylim([0, 120])
+        if scenario == 'Rural':
+            plt.legend()
+        else:
+            plt.legend().set_visible(False)
+        plt.grid(axis='y', alpha=0.3)
+        plt.tight_layout()
+
+        plt.savefig(f'energy_comparison_v1_{scenario.lower().replace(" ", "_")}.pdf',
+                    format='pdf', dpi=300, bbox_inches='tight')
+        plt.show()
+
+    # SECONDA COMPARISON: WDM, WDM-WP, P2MP (best/worst), P2MP-WP (best/worst)
+    print("\nCreating second comparison plots (with WP variants)...")
+
+    # COST COMPARISON V2
+    for scenario in deployment_scenarios:
+        plt.figure(figsize=(14, 8))
+
+        # Filtra dati per includere WDM-WP e P2MP-WP
+        df_scenario = df_best_worst[
+            (df_best_worst['Scenario'] == scenario) &
+            df_best_worst['Solution'].isin(['WDM', 'WDM-WP', 'P2MP', 'P2MP-WP'])
+            ]
+
+        # Prepara labels
+        x_labels = ['WDM', 'WDM-WP', 'P2MP\n(Best)', 'P2MP-WP\n(Best)', 'P2MP\n(Worst)', 'P2MP-WP\n(Worst)']
+        x_pos = np.arange(len(x_labels))
+        width = 0.35
+
+        # Arrays per i dati
+        mt_tx = []
+        mt_mux = []
+        lt_tx = []
+        lt_mux = []
+
+        # WDM e WDM-WP
+        for sol in ['WDM', 'WDM-WP']:
+            df_sol_mt = df_scenario[(df_scenario['Solution'] == sol) & (df_scenario['Term'] == 'Medium')]
+            df_sol_lt = df_scenario[(df_scenario['Solution'] == sol) & (df_scenario['Term'] == 'Long')]
+
+            mt_tx.append(df_sol_mt['TX Cost'].values[0] if len(df_sol_mt) > 0 else 0)
+            mt_mux.append(df_sol_mt['MUX Cost'].values[0] if len(df_sol_mt) > 0 else 0)
+            lt_tx.append(df_sol_lt['TX Cost'].values[0] if len(df_sol_lt) > 0 else 0)
+            lt_mux.append(df_sol_lt['MUX Cost'].values[0] if len(df_sol_lt) > 0 else 0)
+
+        # P2MP e P2MP-WP (Best e Worst)
+        for sol in ['P2MP', 'P2MP-WP']:
+            for case in ['Best', 'Worst']:
+                df_sol_mt = df_scenario[(df_scenario['Solution'] == sol) &
+                                        (df_scenario['Case'] == case) &
+                                        (df_scenario['Term'] == 'Medium')]
+                df_sol_lt = df_scenario[(df_scenario['Solution'] == sol) &
+                                        (df_scenario['Case'] == case) &
+                                        (df_scenario['Term'] == 'Long')]
+
+                mt_tx.append(df_sol_mt['TX Cost'].values[0] if len(df_sol_mt) > 0 else 0)
+                mt_mux.append(df_sol_mt['MUX Cost'].values[0] if len(df_sol_mt) > 0 else 0)
+                lt_tx.append(df_sol_lt['TX Cost'].values[0] if len(df_sol_lt) > 0 else 0)
+                lt_mux.append(df_sol_lt['MUX Cost'].values[0] if len(df_sol_lt) > 0 else 0)
+
+        # Plot
+        colors_medium = ['#1f77b4', '#aec7e8']
+        colors_long = ['#ff7f0e', '#ffbb78']
+
+        # Medium term bars
+        plt.bar(x_pos - width / 2, mt_tx, width, label='Transmission (MT)', color=colors_medium[0], edgecolor='black')
+        plt.bar(x_pos - width / 2, mt_mux, width, bottom=mt_tx, label='Switching (MT)',
+                color=colors_medium[1], edgecolor='black', hatch='//')
+
+        # Long term bars
+        plt.bar(x_pos + width / 2, lt_tx, width, label='Transmission (LT)', color=colors_long[0], edgecolor='black')
+        plt.bar(x_pos + width / 2, lt_mux, width, bottom=lt_tx, label='Switching (LT)',
+                color=colors_long[1], edgecolor='black', hatch='\\\\')
+
+        plt.ylabel('CAPEX (Cost Units)')
+        plt.xlabel('')
+        plt.xticks(x_pos, x_labels, rotation=0)
+        plt.xlim([-0.5, 5.5])
+        plt.ylim([0, 350])
+        if scenario == 'Rural':
+            plt.legend()
+        else:
+            plt.legend().set_visible(False)
+        plt.grid(axis='y', alpha=0.3)
+        plt.tight_layout()
+
+        plt.savefig(f'cost_comparison_v2_{scenario.lower().replace(" ", "_")}.pdf',
+                    format='pdf', dpi=300, bbox_inches='tight')
+        plt.show()
+
+    # ENERGY COMPARISON V2
+    for scenario in deployment_scenarios:
+        plt.figure(figsize=(14, 8))
+
+        # Filtra dati
+        df_scenario = df_best_worst[
+            (df_best_worst['Scenario'] == scenario) &
+            df_best_worst['Solution'].isin(['WDM', 'WDM-WP', 'P2MP', 'P2MP-WP'])
+            ]
+
+        # Prepara labels
+        x_labels = ['WDM', 'WDM-WP', 'P2MP\n(Best)', 'P2MP-WP\n(Best)', 'P2MP\n(Worst)', 'P2MP-WP\n(Worst)']
+        x_pos = np.arange(len(x_labels))
+        width = 0.35
+
+        # Arrays per i dati
+        mt_tx_energy = []
+        mt_sw_energy = []
+        lt_tx_energy = []
+        lt_sw_energy = []
+
+        # WDM e WDM-WP
+        for sol in ['WDM', 'WDM-WP']:
+            df_sol_mt = df_scenario[(df_scenario['Solution'] == sol) & (df_scenario['Term'] == 'Medium')]
+            df_sol_lt = df_scenario[(df_scenario['Solution'] == sol) & (df_scenario['Term'] == 'Long')]
+
+            mt_tx_energy.append(df_sol_mt['TX Energy'].values[0] if len(df_sol_mt) > 0 else 0)
+            mt_sw_energy.append(df_sol_mt['SW Energy'].values[0] if len(df_sol_mt) > 0 else 0)
+            lt_tx_energy.append(df_sol_lt['TX Energy'].values[0] if len(df_sol_lt) > 0 else 0)
+            lt_sw_energy.append(df_sol_lt['SW Energy'].values[0] if len(df_sol_lt) > 0 else 0)
+
+        # P2MP e P2MP-WP (Best e Worst)
+        for sol in ['P2MP', 'P2MP-WP']:
+            for case in ['Best', 'Worst']:
+                df_sol_mt = df_scenario[(df_scenario['Solution'] == sol) &
+                                        (df_scenario['Case'] == case) &
+                                        (df_scenario['Term'] == 'Medium')]
+                df_sol_lt = df_scenario[(df_scenario['Solution'] == sol) &
+                                        (df_scenario['Case'] == case) &
+                                        (df_scenario['Term'] == 'Long')]
+
+                mt_tx_energy.append(df_sol_mt['TX Energy'].values[0] if len(df_sol_mt) > 0 else 0)
+                mt_sw_energy.append(df_sol_mt['SW Energy'].values[0] if len(df_sol_mt) > 0 else 0)
+                lt_tx_energy.append(df_sol_lt['TX Energy'].values[0] if len(df_sol_lt) > 0 else 0)
+                lt_sw_energy.append(df_sol_lt['SW Energy'].values[0] if len(df_sol_lt) > 0 else 0)
+
+        # Plot
+        colors_medium = ['#1f77b4', '#aec7e8']
+        colors_long = ['#ff7f0e', '#ffbb78']
+
+        # Medium term bars
+        plt.bar(x_pos - width / 2, mt_tx_energy, width, label='Transmission (MT)', color=colors_medium[0], edgecolor='black')
+        plt.bar(x_pos - width / 2, mt_sw_energy, width, bottom=mt_tx_energy, label='Switching (MT)',
+                color=colors_medium[1], edgecolor='black', hatch='//')
+
+        # Long term bars
+        plt.bar(x_pos + width / 2, lt_tx_energy, width, label='Transmission (LT)', color=colors_long[0], edgecolor='black')
+        plt.bar(x_pos + width / 2, lt_sw_energy, width, bottom=lt_tx_energy, label='Switching (LT)',
+                color=colors_long[1], edgecolor='black', hatch='\\\\')
+
+        plt.ylabel('Energy (MWh/year)')
+        plt.xlabel('')
+        plt.xticks(x_pos, x_labels, rotation=0)
+        plt.xlim([-0.5, 5.5])
+        plt.ylim([0, 120])
+        if scenario == 'Rural':
+            plt.legend()
+        else:
+            plt.legend().set_visible(False)
+        plt.grid(axis='y', alpha=0.3)
+        plt.tight_layout()
+
+        plt.savefig(f'energy_comparison_v2_{scenario.lower().replace(" ", "_")}.pdf',
+                    format='pdf', dpi=300, bbox_inches='tight')
+        plt.show()
+
+    print("\n=== BEST/WORST CASE ANALYSIS COMPLETED ===")
+    print("Generated files:")
+    print("- best_worst_case_analysis.csv")
+    print("- cost_comparison_v1_*.pdf (4 files)")
+    print("- energy_comparison_v1_*.pdf (4 files)")
+    print("- cost_comparison_v2_*.pdf (4 files)")
+    print("- energy_comparison_v2_*.pdf (4 files)")
+
+print("\nBest/Worst Case Analysis completed!")
+
+# ANALISI NUMERO DI SWITCH PER SOLUZIONE
+print("\n=== SWITCH COUNT ANALYSIS ===")
+
+
+def count_switches_in_network(T):
+    """Conta il numero totale di switch nella rete per tipo"""
+    switch_count = {
+        'SWITCH_SMALL': 0,
+        'SWITCH_MEDIUM': 0,
+        'SWITCH_BIG': 0,
+        'SWITCH_EXTRA_LARGE': 0
+    }
+
+    for node in T.nodes():
+        for equipment in T.nodes[node]['network_equipment']:
+            if 'SWITCH_SMALL' in equipment.equipment_type.name:
+                switch_count['SWITCH_SMALL'] += 1
+            elif 'SWITCH_MEDIUM' in equipment.equipment_type.name:
+                switch_count['SWITCH_MEDIUM'] += 1
+            elif 'SWITCH_BIG' in equipment.equipment_type.name:
+                switch_count['SWITCH_BIG'] += 1
+            elif 'SWITCH_EXTRA_LARGE' in equipment.equipment_type.name:
+                switch_count['SWITCH_EXTRA_LARGE'] += 1
+
+    return switch_count
+
+
+# Raccogli dati sui switch
+switch_results = []
+
+for term in ['Medium', 'Long']:
+    for scenario in deployment_scenarios:
+        print(f"Counting switches for {scenario} - {term} term...")
+
+        # P2P
+        T, T_m, A = create_geotype(scenario)
+        deploy_radio_equipment(T, term, scenario)
+        soluzione_1_with_smallcellswitch(T, term)
+        p2p_switches = count_switches_in_network(T)
+
+        switch_results.append({
+            'Solution': 'P2P',
+            'Case': 'N/A',
+            'Term': term,
+            'Scenario': scenario,
+            'Small': p2p_switches['SWITCH_SMALL'],
+            'Medium': p2p_switches['SWITCH_MEDIUM'],
+            'Big': p2p_switches['SWITCH_BIG'],
+            'Extra Large': p2p_switches['SWITCH_EXTRA_LARGE'],
+            'Total': sum(p2p_switches.values())
+        })
+
+        # WDM
+        T, T_m, A = create_geotype(scenario)
+        deploy_radio_equipment(T, term, scenario)
+        soluzione_2_with_smallcellmux(T, term)
+        wdm_switches = count_switches_in_network(T)
+
+        switch_results.append({
+            'Solution': 'WDM',
+            'Case': 'N/A',
+            'Term': term,
+            'Scenario': scenario,
+            'Small': wdm_switches['SWITCH_SMALL'],
+            'Medium': wdm_switches['SWITCH_MEDIUM'],
+            'Big': wdm_switches['SWITCH_BIG'],
+            'Extra Large': wdm_switches['SWITCH_EXTRA_LARGE'],
+            'Total': sum(wdm_switches.values())
+        })
+
+        # P2MP Best Case
+        T, T_m, A = create_geotype(scenario)
+        deploy_radio_equipment(T, term, scenario)
+        update_xr_equipment_scenario(network_equipment_types, NetworkEquipmentTypeEnum, 'best')
+        soluzione_3_with_smallcellaggr(T, term)
+        p2mp_best_switches = count_switches_in_network(T)
+
+        switch_results.append({
+            'Solution': 'P2MP',
+            'Case': 'Best',
+            'Term': term,
+            'Scenario': scenario,
+            'Small': p2mp_best_switches['SWITCH_SMALL'],
+            'Medium': p2mp_best_switches['SWITCH_MEDIUM'],
+            'Big': p2mp_best_switches['SWITCH_BIG'],
+            'Extra Large': p2mp_best_switches['SWITCH_EXTRA_LARGE'],
+            'Total': sum(p2mp_best_switches.values())
+        })
+
+        # P2MP Worst Case
+        T, T_m, A = create_geotype(scenario)
+        deploy_radio_equipment(T, term, scenario)
+        update_xr_equipment_scenario(network_equipment_types, NetworkEquipmentTypeEnum, 'worst')
+        soluzione_3_with_smallcellaggr(T, term)
+        p2mp_worst_switches = count_switches_in_network(T)
+
+        switch_results.append({
+            'Solution': 'P2MP',
+            'Case': 'Worst',
+            'Term': term,
+            'Scenario': scenario,
+            'Small': p2mp_worst_switches['SWITCH_SMALL'],
+            'Medium': p2mp_worst_switches['SWITCH_MEDIUM'],
+            'Big': p2mp_worst_switches['SWITCH_BIG'],
+            'Extra Large': p2mp_worst_switches['SWITCH_EXTRA_LARGE'],
+            'Total': sum(p2mp_worst_switches.values())
+        })
+
+# Converti in DataFrame
+df_switches = pd.DataFrame(switch_results)
+
+# PLOT 1: Numero totale di switch per scenario con P2MP best e worst
+plt.rc('font', size=24)
+
+for scenario in deployment_scenarios:
+    plt.figure(figsize=(12, 7))
+
+    df_scenario = df_switches[df_switches['Scenario'] == scenario]
+
+    x_labels = ['P2P', 'WDM', 'P2MP\n(Best)', 'P2MP\n(Worst)']
+    x_pos = np.arange(len(x_labels))
+    width = 0.35
+
+    # Medium Term
+    mt_counts = []
+    # P2P
+    df_sol = df_scenario[(df_scenario['Solution'] == 'P2P') & (df_scenario['Term'] == 'Medium')]
+    mt_counts.append(df_sol['Total'].values[0] if len(df_sol) > 0 else 0)
+
+    # WDM
+    df_sol = df_scenario[(df_scenario['Solution'] == 'WDM') & (df_scenario['Term'] == 'Medium')]
+    mt_counts.append(df_sol['Total'].values[0] if len(df_sol) > 0 else 0)
+
+    # P2MP Best
+    df_sol = df_scenario[(df_scenario['Solution'] == 'P2MP') &
+                         (df_scenario['Case'] == 'Best') &
+                         (df_scenario['Term'] == 'Medium')]
+    mt_counts.append(df_sol['Total'].values[0] if len(df_sol) > 0 else 0)
+
+    # P2MP Worst
+    df_sol = df_scenario[(df_scenario['Solution'] == 'P2MP') &
+                         (df_scenario['Case'] == 'Worst') &
+                         (df_scenario['Term'] == 'Medium')]
+    mt_counts.append(df_sol['Total'].values[0] if len(df_sol) > 0 else 0)
+
+    # Long Term
+    lt_counts = []
+    # P2P
+    df_sol = df_scenario[(df_scenario['Solution'] == 'P2P') & (df_scenario['Term'] == 'Long')]
+    lt_counts.append(df_sol['Total'].values[0] if len(df_sol) > 0 else 0)
+
+    # WDM
+    df_sol = df_scenario[(df_scenario['Solution'] == 'WDM') & (df_scenario['Term'] == 'Long')]
+    lt_counts.append(df_sol['Total'].values[0] if len(df_sol) > 0 else 0)
+
+    # P2MP Best
+    df_sol = df_scenario[(df_scenario['Solution'] == 'P2MP') &
+                         (df_scenario['Case'] == 'Best') &
+                         (df_scenario['Term'] == 'Long')]
+    lt_counts.append(df_sol['Total'].values[0] if len(df_sol) > 0 else 0)
+
+    # P2MP Worst
+    df_sol = df_scenario[(df_scenario['Solution'] == 'P2MP') &
+                         (df_scenario['Case'] == 'Worst') &
+                         (df_scenario['Term'] == 'Long')]
+    lt_counts.append(df_sol['Total'].values[0] if len(df_sol) > 0 else 0)
+
+    # Plot
+    plt.bar(x_pos - width / 2, mt_counts, width, label='Medium Term', color='#1f77b4', edgecolor='black')
+    plt.bar(x_pos + width / 2, lt_counts, width, label='Long Term', color='#ff7f0e', edgecolor='black')
+
+    plt.ylabel('Number of Switches')
+    plt.xlabel('Solution')
+    plt.title(f'Total Switch Count - {scenario}')
+    plt.xticks(x_pos, x_labels)
+    plt.legend()
+    plt.grid(axis='y', alpha=0.3)
+    plt.tight_layout()
+
+    plt.savefig(f'switch_count_total_{scenario.lower().replace(" ", "_")}.pdf',
+                format='pdf', dpi=300, bbox_inches='tight')
+    plt.show()
+
+# Salva i risultati
+df_switches.to_csv('switch_count_analysis_with_best_worst.csv', index=False)
+print("\nSwitch count data saved to 'switch_count_analysis_with_best_worst.csv'")
